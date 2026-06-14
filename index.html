@@ -349,6 +349,63 @@
       .home-specialty{ font-size:16px; }
     }
 
+    /* BACKUP PANEL */
+    .backup-panel{
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(45,45,123,.22);
+    }
+    .backup-info{ display:flex; align-items:center; gap:14px; }
+    .backup-icon{
+      width:46px; height:46px; border-radius:12px;
+      background:rgba(255,255,255,.15);
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; flex-shrink:0;
+    }
+    .backup-title{ font-size:16px; font-weight:700; color:white; margin-bottom:3px; }
+    .backup-sub{ font-size:12px; color:rgba(255,255,255,.7); }
+    .backup-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-backup-export{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:10px 20px; border-radius:var(--radius-sm);
+      background:var(--teal); color:white;
+      border:none; cursor:pointer;
+      font-size:14px; font-weight:700;
+      transition:all .2s;
+    }
+    .btn-backup-export:hover{ background:var(--teal-dark); transform:translateY(-1px); }
+    .btn-backup-import{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:10px 20px; border-radius:var(--radius-sm);
+      background:rgba(255,255,255,.15); color:white;
+      border:1.5px solid rgba(255,255,255,.35); cursor:pointer;
+      font-size:14px; font-weight:700;
+      transition:all .2s;
+    }
+    .btn-backup-import:hover{ background:rgba(255,255,255,.25); border-color:white; }
+
+    /* BACKUP MODAL */
+    .backup-summary{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+      gap:12px; margin:16px 0;
+    }
+    .backup-summary-item{
+      background:var(--gray-50); border-radius:var(--radius-sm);
+      padding:12px; text-align:center;
+      border-left:3px solid var(--teal);
+    }
+    .backup-summary-item.navy{ border-left-color:var(--navy); }
+    .backup-summary-num{ font-size:26px; font-weight:800; color:var(--navy); }
+    .backup-summary-lbl{ font-size:11px; color:var(--gray-500); font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+
     /* PRINT REPORT */
     .report-btn-area{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 
@@ -766,6 +823,27 @@
 <div id="mod-reportes" class="module">
   <div class="module-header">
     <div class="module-title">📊 Reportes</div>
+  </div>
+
+  <!-- BACKUP PANEL -->
+  <div class="backup-panel">
+    <div class="backup-info">
+      <div class="backup-icon">💾</div>
+      <div>
+        <div class="backup-title">Respaldo de Datos</div>
+        <div class="backup-sub" id="backup-status">Los datos se guardan en este dispositivo</div>
+      </div>
+    </div>
+    <div class="backup-actions">
+      <button class="btn-backup-import" onclick="importarDatos()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar backup
+      </button>
+      <button class="btn-backup-export" onclick="exportarDatos()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar backup
+      </button>
+    </div>
   </div>
 
   <!-- Filtro de fechas global -->
@@ -1953,11 +2031,105 @@ function reporteGastos(){
   openReport('Reporte de Gastos',cuerpo);
 }
 
+// ═══════════ BACKUP / EXPORTAR / IMPORTAR ═══════════
+function buildBackup(){
+  return {
+    version: '2.0',
+    app: 'MotionMed',
+    exportado: new Date().toLocaleString('es-CR'),
+    clientes, profesionales, gastos, ingresos, equipos
+  };
+}
+
+function exportarDatos(){
+  const data = buildBackup();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const fecha = new Date().toISOString().slice(0,10);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `motionmed-backup-${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  const ahora = new Date().toLocaleString('es-CR');
+  localStorage.setItem('mm_ultimo_backup', ahora);
+  actualizarEstadoBackup();
+  toast('✅ Backup exportado correctamente');
+}
+
+function importarDatos(){
+  const input = document.createElement('input');
+  input.type  = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      // Validar que es un backup de MotionMed
+      if (data.app !== 'MotionMed') {
+        toast('⚠️ El archivo no es un backup válido de MotionMed');
+        return;
+      }
+
+      const resumen = `
+📅 Exportado: ${data.exportado || '—'}
+
+👤 Clientes:       ${(data.clientes||[]).length}
+🩺 Profesionales:  ${(data.profesionales||[]).length}
+💰 Ingresos:       ${(data.ingresos||[]).length} registros
+💸 Gastos:         ${(data.gastos||[]).length} registros
+🏋️ Equipos:        ${(data.equipos||[]).length}
+
+¿Desea restaurar estos datos?
+(Reemplazará toda la información actual)`;
+
+      if (!confirm(resumen)) return;
+
+      clientes      = data.clientes      || [];
+      profesionales = data.profesionales || [];
+      gastos        = data.gastos        || [];
+      ingresos      = data.ingresos      || [];
+      equipos       = data.equipos       || [];
+
+      DB.save('mm_clientes',      clientes);
+      DB.save('mm_profesionales', profesionales);
+      DB.save('mm_gastos',        gastos);
+      DB.save('mm_ingresos',      ingresos);
+      DB.save('mm_equipos',       equipos);
+
+      renderAll();
+      actualizarEstadoBackup();
+      toast('✅ Datos restaurados correctamente');
+    } catch(err) {
+      toast('⚠️ Error al leer el archivo. Verifique que sea un backup válido.');
+    }
+  };
+  input.click();
+}
+
+function actualizarEstadoBackup(){
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  const ult = localStorage.getItem('mm_ultimo_backup');
+  const total = clientes.length + profesionales.length + ingresos.length + gastos.length + equipos.length;
+  el.textContent = ult
+    ? `Último backup: ${ult}  •  ${total} registros en el sistema`
+    : `${total} registros guardados en este dispositivo`;
+}
+
 // ═══════════ PWA ═══════════
 if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 renderAll();
+actualizarEstadoBackup();
 </script>
 </body>
 </html>
