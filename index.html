@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#2D2D7B"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="MotionMed"/>
+  <link rel="manifest" href="manifest.json"/>
+  <title>MotionMed</title>
+  <style>
+    :root{
+      --navy:#2D2D7B;--navy-dark:#1e1e5c;--navy-light:#3d3d9e;
+      --teal:#00BFA5;--teal-light:#00D4B8;--teal-dark:#009688;
+      --white:#ffffff;--gray-50:#f8f9fc;--gray-100:#eef0f7;
+      --gray-200:#dde0ef;--gray-500:#8890b0;--gray-700:#4a5080;
+      --text:#1a1a4e;
+      --shadow:0 4px 24px rgba(45,45,123,.10);
+      --shadow-sm:0 2px 8px rgba(45,45,123,.08);
+      --radius:16px;--radius-sm:10px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      font-size:16px;background:var(--gray-50);color:var(--text);
+      min-height:100vh;display:flex;flex-direction:column;}
+
+    /* HEADER */
+    header{background:var(--white);box-shadow:var(--shadow-sm);padding:12px 20px;
+      display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;}
+    .logo-circle{width:54px;height:54px;border-radius:50%;border:2.5px solid var(--navy);
+      display:flex;align-items:center;justify-content:center;background:var(--white);
+      flex-shrink:0;overflow:hidden;}
+    .logo-svg{width:46px;height:46px;}
+    .header-info h1{font-size:14px;color:var(--gray-500);font-weight:500;line-height:1.4;}
+    .header-info h2{font-size:13px;color:var(--navy);font-weight:700;line-height:1.4;}
+
+    /* NAV */
+    nav{background:var(--navy);display:flex;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;}
+    nav::-webkit-scrollbar{display:none;}
+    .nav-btn{flex:0 0 auto;padding:13px 20px;color:rgba(255,255,255,.65);border:none;
+      background:none;cursor:pointer;font-size:14px;font-weight:600;letter-spacing:.3px;
+      white-space:nowrap;transition:all .2s;border-bottom:3px solid transparent;
+      display:flex;align-items:center;gap:7px;}
+    .nav-btn.active{color:var(--teal-light);border-bottom-color:var(--teal-light);}
+    .nav-btn:hover{color:var(--white);}
+
+    /* MAIN */
+    main{flex:1;padding:20px;max-width:1050px;width:100%;margin:0 auto;}
+    .module{display:none;}.module.active{display:block;}
+
+    .module-header{display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+    .module-title{font-size:22px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:10px;}
+    .module-title span{background:var(--teal);color:white;border-radius:8px;padding:4px 11px;font-size:14px;}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+    /* SEARCH */
+    .search-bar{display:flex;align-items:center;gap:10px;background:var(--white);
+      border:1.5px solid var(--gray-200);border-radius:30px;padding:9px 16px;
+      margin-bottom:16px;transition:border .2s;}
+    .search-bar:focus-within{border-color:var(--teal);}
+    .search-bar input{border:none;outline:none;font-size:15px;color:var(--text);
+      background:transparent;width:100%;}
+
+    /* CLIENT DROPDOWN */
+    .client-search-wrap{position:relative;}
+    .client-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;
+      background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+      box-shadow:var(--shadow);z-index:60;max-height:220px;overflow-y:auto;display:none;}
+    .client-dropdown.open{display:block;}
+    .client-dropdown-item{padding:11px 14px;cursor:pointer;font-size:15px;
+      border-bottom:1px solid var(--gray-100);transition:background .15s;}
+    .client-dropdown-item:last-child{border-bottom:none;}
+    .client-dropdown-item:hover{background:var(--gray-50);}
+    .client-dropdown-item small{color:var(--gray-500);font-size:12px;}
+    .client-selected-badge{display:inline-flex;align-items:center;gap:6px;
+      background:#e0faf6;color:var(--teal-dark);padding:5px 12px;
+      border-radius:20px;font-size:14px;font-weight:600;margin-top:6px;}
+    .client-selected-badge button{background:none;border:none;cursor:pointer;
+      color:var(--teal-dark);font-size:15px;line-height:1;padding:0;}
+
+    /* BUTTONS */
+    .btn{padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;
+      font-size:15px;font-weight:600;transition:all .2s;
+      display:inline-flex;align-items:center;gap:6px;}
+    .btn-primary{background:var(--teal);color:white;}
+    .btn-primary:hover{background:var(--teal-dark);transform:translateY(-1px);}
+    .btn-report{background:var(--navy);color:white;}
+    .btn-report:hover{background:var(--navy-dark);transform:translateY(-1px);}
+    .btn-danger{background:#fee2e2;color:#dc2626;padding:7px 13px;font-size:13px;}
+    .btn-danger:hover{background:#fecaca;}
+    .btn-edit{background:var(--gray-100);color:var(--navy);padding:7px 13px;font-size:13px;}
+    .btn-edit:hover{background:var(--gray-200);}
+    .btn-view{background:#e0faf6;color:var(--teal-dark);padding:7px 13px;font-size:13px;}
+    .btn-view:hover{background:#c0f2eb;}
+    .btn-comision{background:#ede9ff;color:#5b3aee;padding:7px 13px;font-size:13px;font-weight:600;}
+    .btn-comision:hover{background:#ddd5ff;}
+    .btn-cancel{background:var(--gray-100);color:var(--gray-700);}
+    .btn-cancel:hover{background:var(--gray-200);}
+    .btn-pagar{background:var(--teal);color:white;border:none;padding:11px 24px;
+      border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;
+      transition:all .2s;white-space:nowrap;}
+    .btn-pagar:hover{background:var(--teal-dark);transform:translateY(-1px);}
+
+    /* CARDS / TABLE */
+    .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);
+      padding:20px;margin-bottom:16px;}
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:14px;}
+    th{background:var(--navy);color:white;padding:12px 15px;text-align:left;
+      font-weight:600;font-size:13px;letter-spacing:.3px;}
+    th:first-child{border-radius:8px 0 0 0;}th:last-child{border-radius:0 8px 0 0;}
+    td{padding:12px 15px;border-bottom:1px solid var(--gray-100);
+      color:var(--gray-700);font-size:14px;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--gray-50);}
+    .actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+    /* MODAL */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(10,10,40,.45);
+      z-index:200;align-items:center;justify-content:center;padding:16px;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--white);border-radius:var(--radius);padding:28px;
+      width:100%;max-width:580px;box-shadow:0 20px 60px rgba(45,45,123,.25);
+      animation:modalIn .2s ease;max-height:90vh;overflow-y:auto;}
+    .modal-wide{max-width:720px;}
+    @keyframes modalIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:none}}
+    .modal h3{font-size:19px;color:var(--navy);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+
+    /* FORM */
+    .form-group{margin-bottom:14px;}
+    .form-group label{display:block;font-size:13px;font-weight:700;color:var(--navy);
+      margin-bottom:5px;letter-spacing:.3px;}
+    .form-group input,.form-group select,.form-group textarea{
+      width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);
+      border-radius:var(--radius-sm);font-size:15px;color:var(--text);
+      background:var(--gray-50);transition:border .2s;outline:none;}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+      border-color:var(--teal);background:white;}
+    .form-row{display:flex;gap:12px;}
+    .form-row .form-group{flex:1;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;
+      margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-100);}
+
+    /* SECTION DIVIDER */
+    .section-title{font-size:13px;font-weight:800;color:var(--navy);
+      letter-spacing:.6px;text-transform:uppercase;margin:18px 0 10px;
+      padding:8px 12px;background:var(--gray-100);border-radius:8px;
+      display:flex;align-items:center;gap:6px;}
+
+    /* OBSERVACIONES GRID */
+    .obs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;
+      background:var(--gray-50);padding:14px;border-radius:var(--radius-sm);
+      border:1.5px solid var(--gray-200);margin-bottom:14px;}
+    .obs-item label{font-size:12px;font-weight:700;color:var(--navy);display:block;margin-bottom:4px;}
+    .obs-item input,.obs-item select{width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);
+      border-radius:8px;font-size:14px;color:var(--text);background:white;outline:none;}
+    .obs-item input:focus,.obs-item select:focus{border-color:var(--teal);}
+
+    /* FICHA CLIENTE */
+    .ficha-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;
+      padding:14px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);
+      border-radius:var(--radius-sm);color:white;}
+    .ficha-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.2);
+      display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+    .ficha-name{font-size:18px;font-weight:700;}
+    .ficha-sub{font-size:13px;opacity:.8;}
+    .ficha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;}
+    .ficha-item{background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;}
+    .ficha-item-label{font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+    .ficha-item-value{font-size:15px;font-weight:600;color:var(--navy);}
+    .ficha-motivo{background:var(--gray-50);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;}
+    .ficha-motivo-label{font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+    .ficha-motivo-text{font-size:15px;color:var(--text);line-height:1.5;}
+
+    /* PAGO MULTI PANEL */
+    .pago-panel{background:white;border-radius:var(--radius);box-shadow:var(--shadow-sm);
+      padding:20px;margin-bottom:20px;border-top:4px solid var(--teal);}
+    .pago-panel h4{font-size:16px;color:var(--navy);font-weight:700;margin-bottom:14px;
+      display:flex;align-items:center;gap:8px;}
+    .pago-services{display:flex;flex-direction:column;gap:12px;margin-top:14px;}
+    .pago-service-row{border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);
+      padding:14px;transition:border .2s;background:var(--gray-50);}
+    .pago-service-row.checked{border-color:var(--teal);background:#f0fdfb;}
+    .pago-service-check{display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0;}
+    .pago-service-check input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal);cursor:pointer;}
+    .pago-service-check span{font-size:15px;font-weight:700;color:var(--navy);}
+    .pago-service-fields{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+    .pago-service-fields .form-group{flex:1;min-width:120px;margin-bottom:0;}
+    .pago-total-bar{display:flex;align-items:center;justify-content:space-between;
+      background:var(--navy);color:white;border-radius:var(--radius-sm);
+      padding:12px 18px;margin-top:14px;font-weight:700;}
+    .pago-total-bar .amount{font-size:20px;color:var(--teal-light);}
+
+    /* SUB TABS */
+    .sub-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .sub-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--gray-200);
+      background:white;color:var(--gray-700);cursor:pointer;font-size:14px;font-weight:600;transition:all .2s;}
+    .sub-tab.active{background:var(--navy);color:white;border-color:var(--navy);}
+    .sub-tab:hover:not(.active){border-color:var(--teal);color:var(--teal);}
+    .sub-panel{display:none;}.sub-panel.active{display:block;}
+
+    /* STATS */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;margin-bottom:20px;}
+    .stat-card{background:var(--white);border-radius:var(--radius);padding:17px;
+      box-shadow:var(--shadow-sm);border-left:4px solid var(--teal);}
+    .stat-card.navy{border-left-color:var(--navy);}
+    .stat-label{font-size:11px;color:var(--gray-500);font-weight:700;margin-bottom:5px;letter-spacing:.3px;}
+    .stat-value{font-size:20px;font-weight:700;color:var(--navy);}
+
+    /* EMPTY */
+    .empty-state{text-align:center;padding:44px 20px;color:var(--gray-500);}
+    .empty-state svg{margin-bottom:12px;opacity:.35;}
+    .empty-state p{font-size:16px;}
+
+    /* BADGE */
+    .badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+    .badge-teal{background:#e0faf6;color:var(--teal-dark);}
+    .badge-navy{background:#e8e8f5;color:var(--navy);}
+    .badge-green{background:#dcfce7;color:#16a34a;}
+    .badge-orange{background:#fff7ed;color:#c2410c;}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:white;
+      padding:13px 22px;border-radius:10px;font-size:14px;font-weight:600;
+      box-shadow:var(--shadow);opacity:0;transform:translateY(10px);transition:all .3s;
+      z-index:999;max-width:320px;}
+    #toast.show{opacity:1;transform:none;}
+
+    /* REPORT CARDS */
+    .rpt-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);
+      padding:22px;cursor:pointer;transition:all .2s;border:2px solid transparent;
+      display:flex;flex-direction:column;gap:8px;}
+    .rpt-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:var(--shadow);}
+    .rpt-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;
+      justify-content:center;font-size:24px;margin-bottom:4px;}
+    .rpt-title{font-size:16px;font-weight:700;color:var(--navy);}
+    .rpt-desc{font-size:13px;color:var(--gray-500);line-height:1.5;flex:1;}
+    .rpt-btn{font-size:13px;font-weight:700;color:var(--teal);margin-top:4px;}
+    .rpt-result-item{display:flex;align-items:center;justify-content:space-between;
+      padding:11px 14px;border-bottom:1px solid var(--gray-100);cursor:pointer;transition:background .15s;}
+    .rpt-result-item:last-child{border-bottom:none;}
+    .rpt-result-item:hover{background:var(--gray-50);}
+
+    /* HOME SCREEN */
+    #mod-home{
+      min-height: calc(100vh - 120px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: linear-gradient(160deg, #f0f4ff 0%, #e8faf7 50%, #f8f9fc 100%);
+    }
+    #mod-home.active{ display: flex; }
+    .home-card{
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 8px 48px rgba(45,45,123,.13);
+      padding: 52px 48px 44px;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .home-card::before{
+      content:'';
+      position:absolute;top:0;left:0;right:0;height:5px;
+      background: linear-gradient(90deg, var(--navy) 0%, var(--teal) 100%);
+    }
+    .home-logo-wrap{
+      width: 170px; height: 170px;
+      border-radius: 50%;
+      border: 4px solid var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 32px;
+      background: white;
+      box-shadow: 0 4px 24px rgba(45,45,123,.14);
+    }
+    .home-logo-svg{ width: 148px; height: 148px; }
+    .home-brand{
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .home-brand .teal{ color: var(--teal); }
+    .home-brand .navy{ color: var(--navy); }
+    .home-tagline{
+      font-size: 15px;
+      color: var(--gray-500);
+      font-weight: 500;
+      letter-spacing: .5px;
+      margin-bottom: 28px;
+    }
+    .home-divider{
+      width: 60px; height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--navy));
+      border-radius: 2px;
+      margin: 0 auto 28px;
+    }
+    .home-specialty{
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .home-location{
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 15px;
+      color: var(--gray-500);
+      font-weight: 500;
+      background: var(--gray-50);
+      padding: 8px 18px;
+      border-radius: 20px;
+      margin-bottom: 36px;
+    }
+    .home-enter-btn{
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: white;
+      border: none;
+      padding: 15px 44px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .25s;
+      box-shadow: 0 4px 18px rgba(45,45,123,.3);
+      letter-spacing: .3px;
+    }
+    .home-enter-btn:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(45,45,123,.38);
+    }
+    .home-dra{
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 20px;
+      font-style: italic;
+    }
+    @media(max-width:600px){
+      .home-card{ padding: 40px 24px 36px; }
+      .home-logo-wrap{ width:140px; height:140px; }
+      .home-logo-svg{ width:120px; height:120px; }
+      .home-brand{ font-size:30px; }
+      .home-specialty{ font-size:16px; }
+    }
+
+    /* PRINT REPORT */
+    .report-btn-area{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+
+    /* PREVIEW OVERLAY */
+    #rpt-preview-overlay{
+      display:none;position:fixed;inset:0;z-index:500;
+      background:var(--gray-50);flex-direction:column;
+    }
+    #rpt-preview-overlay.open{display:flex;}
+    .rpt-preview-toolbar{
+      background:var(--navy);color:white;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 22px;gap:14px;flex-shrink:0;
+      box-shadow:0 2px 8px rgba(0,0,0,.25);flex-wrap:wrap;
+    }
+    .rpt-preview-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;}
+    .rpt-preview-actions{display:flex;gap:10px;}
+    .btn-prev-back{
+      padding:9px 20px;border-radius:var(--radius-sm);border:1.5px solid rgba(255,255,255,.4);
+      background:transparent;color:white;cursor:pointer;font-size:14px;font-weight:600;
+      transition:all .2s;display:flex;align-items:center;gap:6px;
+    }
+    .btn-prev-back:hover{background:rgba(255,255,255,.12);border-color:white;}
+    .btn-prev-print{
+      padding:9px 22px;border-radius:var(--radius-sm);border:none;
+      background:var(--teal);color:white;cursor:pointer;font-size:14px;font-weight:700;
+      transition:all .2s;display:flex;align-items:center;gap:6px;
+    }
+    .btn-prev-print:hover{background:var(--teal-dark);transform:translateY(-1px);}
+    #rpt-preview-frame{
+      flex:1;width:100%;border:none;background:white;
+    }
+    @media print{
+      #rpt-preview-overlay .rpt-preview-toolbar{display:none!important;}
+      #rpt-preview-overlay{position:static;}
+      body > *:not(#rpt-preview-overlay){display:none!important;}
+    }
+
+    @media(max-width:600px){
+      main{padding:12px;}
+      .form-row{flex-direction:column;}
+      .pago-service-fields{flex-direction:column;}
+      .ficha-grid{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-circle">
+    <svg class="logo-svg" viewBox="0 0 46 46" fill="none">
+      <polyline points="2,27 8,27 11,19 14,33 17,15 20,31 23,27 44,27"
+        stroke="#00BFA5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <text x="4" y="42" font-family="Arial" font-weight="900" font-size="10" fill="#2D2D7B">Motion</text>
+    </svg>
+  </div>
+  <div class="header-info">
+    <h1>Clínica especializada y gimnasio grado médico</h1>
+    <h2>Dra. Alicia Castro M.</h2>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showModule('home')">🏠 INICIO</button>
+  <button class="nav-btn" onclick="showModule('clientes')">👤 CLIENTES</button>
+  <button class="nav-btn" onclick="showModule('profesionales')">🩺 PROFESIONALES</button>
+  <button class="nav-btn" onclick="showModule('gastos')">💸 GASTOS</button>
+  <button class="nav-btn" onclick="showModule('ingresos')">💰 INGRESOS</button>
+  <button class="nav-btn" onclick="showModule('equipos')">🏋️ EQUIPOS</button>
+  <button class="nav-btn" onclick="showModule('reportes')">📊 REPORTES</button>
+</nav>
+
+<main>
+
+<!-- ════════════════ CLIENTES ════════════════ -->
+<div id="mod-home" class="module active">
+  <div class="home-card">
+    <div class="home-logo-wrap">
+      <svg class="home-logo-svg" viewBox="0 0 148 148" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- ECG line -->
+        <polyline
+          points="8,80 28,80 36,56 46,100 54,42 62,90 72,80 140,80"
+          stroke="#00BFA5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- Motion (teal) -->
+        <text x="12" y="122" font-family="Arial" font-weight="900" font-size="28" fill="#00BFA5">Motion</text>
+        <!-- med (navy) -->
+        <text x="103" y="122" font-family="Arial" font-weight="900" font-size="28" fill="#2D2D7B">med</text>
+      </svg>
+    </div>
+
+    <div class="home-brand">
+      <span class="teal">Motion</span><span class="navy">med</span>
+    </div>
+    <div class="home-tagline">Salud en movimiento</div>
+
+    <div class="home-divider"></div>
+
+    <div class="home-specialty">
+      Especialistas en rehabilitación<br/>
+      cardíaca, pulmonar y oncológica
+    </div>
+
+    <div class="home-location">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Palmares, Alajuela, Costa Rica
+    </div>
+
+    <button class="home-enter-btn" onclick="showModule('clientes')">
+      Ingresar al sistema →
+    </button>
+
+    <div class="home-dra">Dra. Alicia Castro M.</div>
+  </div>
+</div>
+
+<div id="mod-clientes" class="module">
+  <div class="module-header">
+    <div class="module-title">👤 Clientes <span id="clientes-count">0</span></div>
+    <div class="header-actions">
+      <button class="btn btn-report" onclick="reporteClientes()">📊 Reporte</button>
+      <button class="btn btn-primary" onclick="openModal('cliente')">+ Nuevo Cliente</button>
+    </div>
+  </div>
+  <div class="search-bar">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="clientes-search" placeholder="Buscar por nombre o identificación..." oninput="renderClientes()"/>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Identificación</th><th>Teléfono</th><th>Correo</th><th>Fecha Ingreso</th><th>Acciones</th></tr></thead>
+        <tbody id="clientes-tbody"></tbody>
+      </table>
+    </div>
+    <div id="clientes-empty" class="empty-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <p>No hay clientes registrados</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PROFESIONALES ════════════════ -->
+<div id="mod-profesionales" class="module">
+  <div class="module-header">
+    <div class="module-title">🩺 Profesionales <span id="prof-count">0</span></div>
+    <div class="header-actions">
+      <button class="btn btn-report" onclick="reporteProfesionales()">📊 Reporte</button>
+      <button class="btn btn-primary" onclick="openModal('profesional')">+ Nuevo Profesional</button>
+    </div>
+  </div>
+  <div class="search-bar">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="prof-search" placeholder="Buscar por nombre o especialidad..." oninput="renderProfesionales()"/>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre</th><th>Especialidad</th><th>Identificación</th><th>Teléfono</th><th>Fecha Inicio</th><th>Comisiones</th><th>Acciones</th></tr></thead>
+        <tbody id="prof-tbody"></tbody>
+      </table>
+    </div>
+    <div id="prof-empty" class="empty-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <p>No hay profesionales registrados</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ GASTOS ════════════════ -->
+<div id="mod-gastos" class="module">
+  <div class="module-header">
+    <div class="module-title">💸 Gastos</div>
+    <div class="header-actions">
+      <button class="btn btn-report" onclick="reporteGastos()">📊 Reporte</button>
+      <button class="btn btn-primary" onclick="openModal('gasto')">+ Registrar Gasto</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TOTAL GASTOS</div><div class="stat-value" id="total-gastos">₡0</div></div>
+    <div class="stat-card navy"><div class="stat-label">SERVICIOS PÚBLICOS</div><div class="stat-value" id="total-sp">₡0</div></div>
+    <div class="stat-card"><div class="stat-label">ALQUILER</div><div class="stat-value" id="total-alq">₡0</div></div>
+    <div class="stat-card navy"><div class="stat-label">ADMINISTRATIVOS</div><div class="stat-value" id="total-adm">₡0</div></div>
+    <div class="stat-card"><div class="stat-label">EQUIPOS</div><div class="stat-value" id="total-eq-g">₡0</div></div>
+  </div>
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSubTab('gastos','sp',this)">Servicios Públicos</button>
+    <button class="sub-tab" onclick="showSubTab('gastos','alq',this)">Alquiler</button>
+    <button class="sub-tab" onclick="showSubTab('gastos','adm',this)">Administrativos</button>
+    <button class="sub-tab" onclick="showSubTab('gastos','eq',this)">Equipos</button>
+  </div>
+  <div id="gastos-sp" class="sub-panel active"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Servicio</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+    <tbody id="gastos-sp-tbody"></tbody>
+  </table></div></div></div>
+  <div id="gastos-alq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+    <tbody id="gastos-alq-tbody"></tbody>
+  </table></div></div></div>
+  <div id="gastos-adm" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+    <tbody id="gastos-adm-tbody"></tbody>
+  </table></div></div></div>
+  <div id="gastos-eq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Tipo</th><th>Equipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+    <tbody id="gastos-eq-tbody"></tbody>
+  </table></div></div></div>
+</div>
+
+<!-- ════════════════ INGRESOS ════════════════ -->
+<div id="mod-ingresos" class="module">
+  <div class="module-header">
+    <div class="module-title">💰 Ingresos</div>
+    <div class="header-actions">
+      <button class="btn btn-report" onclick="reporteIngresos()">📊 Reporte</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">TOTAL INGRESOS</div><div class="stat-value" id="total-ingresos">₡0</div></div>
+    <div class="stat-card navy"><div class="stat-label">CONSULTAS CLÍNICA</div><div class="stat-value" id="total-consultas">₡0</div></div>
+    <div class="stat-card"><div class="stat-label">CLIENTES GYM</div><div class="stat-value" id="total-gym">₡0</div></div>
+    <div class="stat-card navy"><div class="stat-label">DOMICILIO</div><div class="stat-value" id="total-dom">₡0</div></div>
+    <div class="stat-card"><div class="stat-label">COMISIONES</div><div class="stat-value" id="total-com">₡0</div></div>
+    <div class="stat-card navy"><div class="stat-label">OTROS</div><div class="stat-value" id="total-otro">₡0</div></div>
+  </div>
+
+  <!-- PAGO MÚLTIPLE -->
+  <div class="pago-panel">
+    <h4>💳 Registrar Pago de Cliente</h4>
+    <div class="client-search-wrap">
+      <div class="form-group" style="margin:0">
+        <label>Buscar Cliente en Base de Datos</label>
+        <input type="text" id="pago-cl-search" placeholder="Escriba nombre o identificación..." autocomplete="off"
+          oninput="searchClientDrop('pago')" onfocus="searchClientDrop('pago')"/>
+      </div>
+      <div id="pago-dropdown" class="client-dropdown"></div>
+      <div id="pago-selected" style="display:none"></div>
+      <input type="hidden" id="pago-client-id"/>
+      <input type="hidden" id="pago-client-name"/>
+    </div>
+
+    <div class="pago-services" id="pago-services">
+      <!-- CONSULTA CLÍNICA -->
+      <div class="pago-service-row" id="svc-con">
+        <label class="pago-service-check">
+          <input type="checkbox" id="chk-con" onchange="toggleService('con')"/>
+          <span>🏥 Consulta Clínica</span>
+        </label>
+        <div id="fields-con" style="display:none" class="pago-service-fields">
+          <div class="form-group">
+            <label>Concepto</label>
+            <select id="con-concepto">
+              <option value="Consulta">Consulta</option>
+              <option value="Valoración">Valoración</option>
+              <option value="Tratamiento">Tratamiento</option>
+              <option value="Paquete">Paquete</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto (₡)</label>
+            <input type="number" id="con-monto" placeholder="0" min="0" step="0.01" oninput="calcTotal()"/>
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="con-fecha"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOMICILIO -->
+      <div class="pago-service-row" id="svc-sdm">
+        <label class="pago-service-check">
+          <input type="checkbox" id="chk-sdm" onchange="toggleService('sdm')"/>
+          <span>🏠 Servicio Domicilio</span>
+        </label>
+        <div id="fields-sdm" style="display:none" class="pago-service-fields">
+          <div class="form-group">
+            <label>Concepto</label>
+            <select id="sdm-concepto">
+              <option value="Consulta">Consulta</option>
+              <option value="Paquete">Paquete</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto (₡)</label>
+            <input type="number" id="sdm-monto" placeholder="0" min="0" step="0.01" oninput="calcTotal()"/>
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="sdm-fecha"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- GYM -->
+      <div class="pago-service-row" id="svc-gym">
+        <label class="pago-service-check">
+          <input type="checkbox" id="chk-gym" onchange="toggleService('gym')"/>
+          <span>💪 Cuota Gym</span>
+        </label>
+        <div id="fields-gym" style="display:none" class="pago-service-fields">
+          <div class="form-group">
+            <label>Concepto</label>
+            <select id="gym-concepto">
+              <option value="Sesión Individual">Sesión Individual</option>
+              <option value="Paquete 2 días">Paquete 2 días</option>
+              <option value="Paquete 3 días">Paquete 3 días</option>
+              <option value="Paquete Full">Paquete Full</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto (₡)</label>
+            <input type="number" id="gym-monto" placeholder="0" min="0" step="0.01" oninput="calcTotal()"/>
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="gym-fecha"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- OTROS -->
+      <div class="pago-service-row" id="svc-otro">
+        <label class="pago-service-check">
+          <input type="checkbox" id="chk-otro" onchange="toggleService('otro')"/>
+          <span>📋 Otros</span>
+        </label>
+        <div id="fields-otro" style="display:none" class="pago-service-fields">
+          <div class="form-group" style="flex:2">
+            <label>Descripción</label>
+            <input type="text" id="otro-concepto" placeholder="Ej. Producto, servicio especial..."/>
+          </div>
+          <div class="form-group">
+            <label>Monto (₡)</label>
+            <input type="number" id="otro-monto" placeholder="0" min="0" step="0.01" oninput="calcTotal()"/>
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="otro-fecha"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pago-total-bar">
+      <span>Total a registrar:</span>
+      <span class="amount" id="pago-total-display">₡0</span>
+      <button class="btn-pagar" onclick="registrarPagoMultiple()">💳 PAGAR</button>
+    </div>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" onclick="showSubTab('ingresos','sdm',this)">🏠 Domicilio</button>
+    <button class="sub-tab" onclick="showSubTab('ingresos','con',this)">🏥 Consultas</button>
+    <button class="sub-tab" onclick="showSubTab('ingresos','gym',this)">💪 Gym</button>
+    <button class="sub-tab" onclick="showSubTab('ingresos','otro',this)">📋 Otros</button>
+    <button class="sub-tab" onclick="showSubTab('ingresos','com',this)">💼 Comisiones</button>
+  </div>
+
+  <div id="ingresos-sdm" class="sub-panel active"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr></thead>
+    <tbody id="ingresos-sdm-tbody"></tbody>
+  </table></div></div></div>
+  <div id="ingresos-con" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr></thead>
+    <tbody id="ingresos-con-tbody"></tbody>
+  </table></div></div></div>
+  <div id="ingresos-gym" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr></thead>
+    <tbody id="ingresos-gym-tbody"></tbody>
+  </table></div></div></div>
+  <div id="ingresos-otro" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Fecha</th><th></th></tr></thead>
+    <tbody id="ingresos-otro-tbody"></tbody>
+  </table></div></div></div>
+  <div id="ingresos-com" class="sub-panel">
+    <div class="pago-panel" style="border-top-color:var(--navy)">
+      <h4 style="color:var(--navy)">ℹ️ Comisiones — se registran desde <strong>PROFESIONALES</strong></h4>
+      <p style="font-size:14px;color:var(--gray-700)">Use el botón <strong>💰 Comisión</strong> en la tabla de profesionales para registrar pagos de comisión.</p>
+    </div>
+    <div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Profesional</th><th>Concepto</th><th>Monto</th><th>Fecha</th><th></th></tr></thead>
+      <tbody id="ingresos-com-tbody"></tbody>
+    </table></div></div>
+  </div>
+</div>
+
+<!-- ════════════════ EQUIPOS ════════════════ -->
+<div id="mod-equipos" class="module">
+  <div class="module-header">
+    <div class="module-title">🏋️ Equipos <span id="equipos-count">0</span></div>
+    <div class="header-actions">
+      <button class="btn btn-report" onclick="reporteEquipos()">📊 Reporte</button>
+      <button class="btn btn-primary" onclick="openModal('equipo')">+ Nuevo Equipo</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nombre Equipo</th><th>Función</th><th>Proveedor</th><th>Fecha Compra</th><th>Acciones</th></tr></thead>
+        <tbody id="equipos-tbody"></tbody>
+      </table>
+    </div>
+    <div id="equipos-empty" class="empty-state" style="display:none">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <p>No hay equipos registrados</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ REPORTES ════════════════ -->
+<div id="mod-reportes" class="module">
+  <div class="module-header">
+    <div class="module-title">📊 Reportes</div>
+  </div>
+
+  <!-- Filtro de fechas global -->
+  <div class="card" style="border-left:4px solid var(--teal);padding:18px 20px;margin-bottom:24px">
+    <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">🗓️ Filtro de período (opcional — aplica a reportes financieros)</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;flex:1;min-width:140px">
+        <label>Desde</label>
+        <input type="date" id="rpt-desde"/>
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:140px">
+        <label>Hasta</label>
+        <input type="date" id="rpt-hasta"/>
+      </div>
+      <button class="btn btn-primary" onclick="limpiarFiltroFecha()" style="padding:11px 18px;font-size:14px">↺ Sin filtro</button>
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:800;color:var(--gray-500);letter-spacing:.6px;text-transform:uppercase;margin-bottom:16px">Seleccione el reporte que desea generar:</div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">
+
+    <!-- CLIENTES -->
+    <div class="rpt-card" onclick="reporteClientes()">
+      <div class="rpt-icon" style="background:#e0faf6;color:var(--teal-dark)">👤</div>
+      <div class="rpt-title">Clientes</div>
+      <div class="rpt-desc">Lista completa de clientes con datos de contacto e información clínica básica.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- FICHA CLÍNICA -->
+    <div class="rpt-card" onclick="showFichaSearch()">
+      <div class="rpt-icon" style="background:#e8e8f5;color:var(--navy)">🩺</div>
+      <div class="rpt-title">Ficha Clínica Individual</div>
+      <div class="rpt-desc">Ficha completa de un cliente específico con observaciones, signos vitales e historial de pagos.</div>
+      <div class="rpt-btn">Buscar cliente →</div>
+    </div>
+
+    <!-- PROFESIONALES -->
+    <div class="rpt-card" onclick="reporteProfesionales()">
+      <div class="rpt-icon" style="background:#ede9ff;color:#5b3aee">🩻</div>
+      <div class="rpt-title">Profesionales</div>
+      <div class="rpt-desc">Directorio de profesionales con comisiones acumuladas y detalle de pagos.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- INGRESOS -->
+    <div class="rpt-card" onclick="reporteIngresos()">
+      <div class="rpt-icon" style="background:#dcfce7;color:#16a34a">💰</div>
+      <div class="rpt-title">Ingresos</div>
+      <div class="rpt-desc">Resumen y detalle de todos los ingresos por categoría: consultas, domicilio, gym, comisiones y otros.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- GASTOS -->
+    <div class="rpt-card" onclick="reporteGastos()">
+      <div class="rpt-icon" style="background:#fee2e2;color:#dc2626">💸</div>
+      <div class="rpt-title">Gastos</div>
+      <div class="rpt-desc">Detalle de gastos por categoría: servicios públicos, alquiler, administrativos y equipos.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="rpt-card" onclick="reporteBalance()">
+      <div class="rpt-icon" style="background:#fff7ed;color:#c2410c">⚖️</div>
+      <div class="rpt-title">Balance General</div>
+      <div class="rpt-desc">Comparativo de ingresos vs gastos con utilidad o déficit del período seleccionado.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- EQUIPOS -->
+    <div class="rpt-card" onclick="reporteEquipos()">
+      <div class="rpt-icon" style="background:#e8e8f5;color:var(--navy)">🏋️</div>
+      <div class="rpt-title">Inventario de Equipos</div>
+      <div class="rpt-desc">Lista de equipos de la clínica con función, proveedor e historial de gastos de mantenimiento.</div>
+      <div class="rpt-btn">Generar reporte →</div>
+    </div>
+
+    <!-- PAGOS POR CLIENTE -->
+    <div class="rpt-card" onclick="showPagosClienteSearch()">
+      <div class="rpt-icon" style="background:#e0faf6;color:var(--teal-dark)">💳</div>
+      <div class="rpt-title">Pagos por Cliente</div>
+      <div class="rpt-desc">Historial completo de todos los pagos de un cliente específico en el período seleccionado.</div>
+      <div class="rpt-btn">Buscar cliente →</div>
+    </div>
+
+  </div>
+
+  <!-- Buscador para ficha clínica -->
+  <div id="rpt-ficha-search" style="display:none;margin-top:24px">
+    <div class="card">
+      <div class="section-title">🔍 Buscar cliente para Ficha Clínica</div>
+      <div class="search-bar" style="margin-bottom:12px">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="rpt-ficha-q" placeholder="Nombre o identificación..." oninput="rptFichaFilter()"/>
+      </div>
+      <div id="rpt-ficha-results"></div>
+    </div>
+  </div>
+
+  <!-- Buscador para pagos por cliente -->
+  <div id="rpt-pagos-search" style="display:none;margin-top:24px">
+    <div class="card">
+      <div class="section-title">🔍 Buscar cliente para Reporte de Pagos</div>
+      <div class="search-bar" style="margin-bottom:12px">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="rpt-pagos-q" placeholder="Nombre o identificación..." oninput="rptPagosFilter()"/>
+      </div>
+      <div id="rpt-pagos-results"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- PREVIEW OVERLAY -->
+<div id="rpt-preview-overlay">
+  <div class="rpt-preview-toolbar">
+    <div class="rpt-preview-title">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span id="rpt-preview-label">Vista Previa</span>
+    </div>
+    <div class="rpt-preview-actions">
+      <button class="btn-prev-back" onclick="closePreview()">
+        ← Regresar
+      </button>
+      <button class="btn-prev-print" onclick="printPreview()">
+        🖨️ Imprimir / Guardar PDF
+      </button>
+    </div>
+  </div>
+  <iframe id="rpt-preview-frame" title="Vista previa del reporte"></iframe>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- CLIENTE -->
+<div id="modal-cliente" class="modal-bg" onclick="closeModalBg(event,'modal-cliente')">
+  <div class="modal modal-wide">
+    <h3>👤 <span id="cliente-modal-title">Nuevo Cliente</span></h3>
+    <input type="hidden" id="cliente-id"/>
+
+    <div class="section-title">📋 Datos Básicos</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="cl-nombre" placeholder="Ej. María González"/>
+      </div>
+      <div class="form-group">
+        <label>Identificación *</label>
+        <input type="text" id="cl-id" placeholder="Cédula o pasaporte"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="tel" id="cl-tel" placeholder="+506 8888-8888"/>
+      </div>
+      <div class="form-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="cl-email" placeholder="correo@ejemplo.com"/>
+      </div>
+      <div class="form-group">
+        <label>Fecha de Ingreso</label>
+        <input type="date" id="cl-fecha"/>
+      </div>
+    </div>
+
+    <div class="section-title">🩺 Observaciones Clínicas</div>
+    <div class="obs-grid">
+      <div class="obs-item"><label>Edad (años)</label><input type="number" id="cl-edad" placeholder="Ej. 35" min="0" max="120"/></div>
+      <div class="obs-item"><label>Peso (kg)</label><input type="number" id="cl-peso" placeholder="Ej. 70.5" min="0" step="0.1"/></div>
+      <div class="obs-item"><label>Estatura (cm)</label><input type="number" id="cl-estatura" placeholder="Ej. 165" min="0"/></div>
+      <div class="obs-item"><label>Presión Arterial</label><input type="text" id="cl-pa" placeholder="Ej. 120/80"/></div>
+      <div class="obs-item"><label>Frec. Cardiaca (lpm)</label><input type="number" id="cl-fc" placeholder="Ej. 72" min="0"/></div>
+      <div class="obs-item"><label>Médico que Refiere</label><input type="text" id="cl-medico" placeholder="Nombre del médico"/></div>
+    </div>
+    <div class="form-group">
+      <label>Motivo de Consulta</label>
+      <textarea id="cl-motivo" rows="3" placeholder="Describa el motivo de consulta o condición del paciente..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FICHA CLIENTE (solo lectura) -->
+<div id="modal-ficha" class="modal-bg" onclick="closeModalBg(event,'modal-ficha')">
+  <div class="modal modal-wide">
+    <div id="ficha-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-report" onclick="imprimirFicha()">🖨️ Imprimir Ficha</button>
+      <button class="btn btn-cancel" onclick="closeModal('modal-ficha')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFESIONAL -->
+<div id="modal-profesional" class="modal-bg" onclick="closeModalBg(event,'modal-profesional')">
+  <div class="modal">
+    <h3>🩺 <span id="prof-modal-title">Nuevo Profesional</span></h3>
+    <input type="hidden" id="prof-id"/>
+    <div class="form-row">
+      <div class="form-group"><label>Nombre completo *</label><input type="text" id="pr-nombre" placeholder="Ej. Dr. Juan Pérez"/></div>
+      <div class="form-group"><label>Especialidad *</label><input type="text" id="pr-esp" placeholder="Ej. Fisioterapia"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Identificación</label><input type="text" id="pr-id" placeholder="Cédula"/></div>
+      <div class="form-group"><label>Teléfono</label><input type="tel" id="pr-tel" placeholder="+506 8888-8888"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Correo Electrónico</label><input type="email" id="pr-email" placeholder="correo@ejemplo.com"/></div>
+      <div class="form-group"><label>Fecha Inicio</label><input type="date" id="pr-fecha"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-profesional')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProfesional()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMISIÓN -->
+<div id="modal-comision" class="modal-bg" onclick="closeModalBg(event,'modal-comision')">
+  <div class="modal">
+    <h3>💰 Registrar Comisión</h3>
+    <input type="hidden" id="comision-prof-id"/>
+    <div class="form-group">
+      <label>Profesional</label>
+      <input type="text" id="comision-prof-nombre" readonly style="background:#eef0f7;color:var(--navy);font-weight:600"/>
+    </div>
+    <div class="form-group">
+      <label>Concepto</label>
+      <select id="comision-concepto">
+        <option value="Comisión mensual">Comisión mensual</option>
+        <option value="Comisión por servicio">Comisión por servicio</option>
+        <option value="Bono">Bono</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Monto (₡) *</label><input type="number" id="comision-monto" placeholder="0" min="0" step="0.01"/></div>
+      <div class="form-group"><label>Fecha</label><input type="date" id="comision-fecha"/></div>
+    </div>
+    <div class="form-group"><label>Notas</label><textarea id="comision-desc" rows="2" placeholder="Observaciones..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-comision')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveComision()">💳 PAGAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- GASTO -->
+<div id="modal-gasto" class="modal-bg" onclick="closeModalBg(event,'modal-gasto')">
+  <div class="modal">
+    <h3>💸 Registrar Gasto</h3>
+    <input type="hidden" id="gasto-id"/>
+    <div class="form-group">
+      <label>Categoría *</label>
+      <select id="gasto-cat" onchange="updateGastoFields()">
+        <option value="">Seleccionar...</option>
+        <option value="sp">Servicios Públicos</option>
+        <option value="alq">Alquiler</option>
+        <option value="adm">Administrativos</option>
+        <option value="eq">Equipos</option>
+      </select>
+    </div>
+    <div id="gasto-sp-fields" style="display:none" class="form-group">
+      <label>Tipo de servicio</label>
+      <select id="gasto-sp-tipo"><option>Agua</option><option>Luz</option><option>Internet</option></select>
+    </div>
+    <div id="gasto-adm-fields" style="display:none" class="form-group">
+      <label>Tipo administrativo</label>
+      <select id="gasto-adm-tipo">
+        <option>Patente Municipal</option><option>Ministerio Salud</option>
+        <option>Ministerio Hacienda</option><option>Colegio Profesional</option>
+      </select>
+    </div>
+    <div id="gasto-eq-fields" style="display:none">
+      <div class="form-group">
+        <label>Tipo de gasto en equipo</label>
+        <select id="gasto-eq-tipo"><option>Compra de equipo</option><option>Mantenimiento de equipo</option></select>
+      </div>
+      <div class="form-group"><label>Nombre del equipo</label><input type="text" id="gasto-eq-nombre" placeholder="Ej. Caminadora"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Monto (₡) *</label><input type="number" id="gasto-monto" placeholder="0.00" min="0" step="0.01"/></div>
+      <div class="form-group"><label>Fecha *</label><input type="date" id="gasto-fecha"/></div>
+    </div>
+    <div class="form-group"><label>Descripción / Notas</label><textarea id="gasto-desc" rows="2" placeholder="Observaciones opcionales..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-gasto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGasto()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EQUIPO -->
+<div id="modal-equipo" class="modal-bg" onclick="closeModalBg(event,'modal-equipo')">
+  <div class="modal">
+    <h3>🏋️ <span id="equipo-modal-title">Nuevo Equipo</span></h3>
+    <input type="hidden" id="equipo-id"/>
+    <div class="form-row">
+      <div class="form-group"><label>Nombre Equipo *</label><input type="text" id="eq-nombre" placeholder="Ej. Caminadora"/></div>
+      <div class="form-group"><label>Función</label><input type="text" id="eq-funcion" placeholder="Ej. Cardio, Rehabilitación"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Proveedor</label><input type="text" id="eq-prov" placeholder="Ej. FitEquip S.A."/></div>
+      <div class="form-group"><label>Fecha de Compra</label><input type="date" id="eq-fecha"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-equipo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEquipo()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════ DATA ═══════════
+const DB={
+  load:(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))||d;}catch{return d;}},
+  save:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+};
+let clientes      = DB.load('mm_clientes');
+let profesionales = DB.load('mm_profesionales');
+let gastos        = DB.load('mm_gastos');
+let ingresos      = DB.load('mm_ingresos');
+let equipos       = DB.load('mm_equipos');
+
+const uid    = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2);
+const fmt    = n=>'₡'+Number(n||0).toLocaleString('es-CR',{minimumFractionDigits:0,maximumFractionDigits:0});
+const fmtDate= d=>d?new Date(d+'T12:00:00').toLocaleDateString('es-CR'):'—';
+const today  = ()=>new Date().toISOString().split('T')[0];
+const esc    = s=>(s||'').replace(/'/g,"\\'");
+
+let fichaActualId = null;
+
+// ═══════════ NAV ═══════════
+function showModule(name){
+  document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mod-'+name).classList.add('active');
+  const map={home:0,clientes:1,profesionales:2,gastos:3,ingresos:4,equipos:5,reportes:6};
+  document.querySelectorAll('.nav-btn')[map[name]].classList.add('active');
+  renderAll();
+}
+function showSubTab(mod,tab,el){
+  document.querySelectorAll(`#mod-${mod} .sub-panel`).forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll(`#mod-${mod} .sub-tab`).forEach(t=>t.classList.remove('active'));
+  document.getElementById(`${mod}-${tab}`).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════ MODALS ═══════════
+function openModal(type,id=null){
+  const t=today();
+  if(type==='cliente'){
+    const editId=id||'';
+    document.getElementById('cliente-id').value=editId;
+    document.getElementById('cliente-modal-title').textContent=editId?'Editar Cliente':'Nuevo Cliente';
+    const f=n=>document.getElementById(n);
+    ['cl-nombre','cl-id','cl-tel','cl-email','cl-edad','cl-peso','cl-estatura','cl-pa','cl-fc','cl-medico','cl-motivo'].forEach(x=>f(x).value='');
+    f('cl-fecha').value=t;
+    if(editId){
+      const c=clientes.find(x=>x.id===editId);
+      if(c){
+        f('cl-nombre').value=c.nombre||''; f('cl-id').value=c.identificacion||'';
+        f('cl-tel').value=c.telefono||''; f('cl-email').value=c.email||'';
+        f('cl-fecha').value=c.fecha||'';
+        const o=c.obs||{};
+        f('cl-edad').value=o.edad||''; f('cl-peso').value=o.peso||'';
+        f('cl-estatura').value=o.estatura||''; f('cl-pa').value=o.pa||'';
+        f('cl-fc').value=o.fc||''; f('cl-medico').value=o.medico||'';
+        f('cl-motivo').value=o.motivo||'';
+      }
+    }
+    document.getElementById('modal-cliente').classList.add('open');
+  } else if(type==='profesional'){
+    const editId=id||'';
+    document.getElementById('prof-id').value=editId;
+    document.getElementById('prof-modal-title').textContent=editId?'Editar Profesional':'Nuevo Profesional';
+    ['pr-nombre','pr-esp','pr-id','pr-tel','pr-email'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pr-fecha').value=t;
+    if(editId){
+      const p=profesionales.find(x=>x.id===editId);
+      if(p){
+        document.getElementById('pr-nombre').value=p.nombre||'';
+        document.getElementById('pr-esp').value=p.especialidad||'';
+        document.getElementById('pr-id').value=p.identificacion||'';
+        document.getElementById('pr-tel').value=p.telefono||'';
+        document.getElementById('pr-email').value=p.email||'';
+        document.getElementById('pr-fecha').value=p.fecha||'';
+      }
+    }
+    document.getElementById('modal-profesional').classList.add('open');
+  } else if(type==='comision'){
+    const p=profesionales.find(x=>x.id===id);
+    document.getElementById('comision-prof-id').value=id;
+    document.getElementById('comision-prof-nombre').value=p?p.nombre:'';
+    document.getElementById('comision-concepto').value='Comisión mensual';
+    document.getElementById('comision-monto').value='';
+    document.getElementById('comision-fecha').value=t;
+    document.getElementById('comision-desc').value='';
+    document.getElementById('modal-comision').classList.add('open');
+  } else if(type==='ficha'){
+    const c=clientes.find(x=>x.id===id);
+    if(!c)return;
+    fichaActualId=id;
+    const o=c.obs||{};
+    document.getElementById('ficha-content').innerHTML=`
+      <div class="ficha-header">
+        <div class="ficha-avatar">👤</div>
+        <div>
+          <div class="ficha-name">${c.nombre}</div>
+          <div class="ficha-sub">ID: ${c.identificacion} &nbsp;|&nbsp; Ingreso: ${fmtDate(c.fecha)}</div>
+          <div class="ficha-sub">${c.telefono||''} ${c.email?'• '+c.email:''}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:var(--navy);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">🩺 Observaciones Clínicas</div>
+      <div class="ficha-grid">
+        <div class="ficha-item"><div class="ficha-item-label">Edad</div><div class="ficha-item-value">${o.edad?o.edad+' años':'—'}</div></div>
+        <div class="ficha-item"><div class="ficha-item-label">Peso</div><div class="ficha-item-value">${o.peso?o.peso+' kg':'—'}</div></div>
+        <div class="ficha-item"><div class="ficha-item-label">Estatura</div><div class="ficha-item-value">${o.estatura?o.estatura+' cm':'—'}</div></div>
+        <div class="ficha-item"><div class="ficha-item-label">Presión Arterial</div><div class="ficha-item-value">${o.pa||'—'}</div></div>
+        <div class="ficha-item"><div class="ficha-item-label">Frec. Cardiaca</div><div class="ficha-item-value">${o.fc?o.fc+' lpm':'—'}</div></div>
+        <div class="ficha-item"><div class="ficha-item-label">Médico que Refiere</div><div class="ficha-item-value">${o.medico||'—'}</div></div>
+      </div>
+      <div class="ficha-motivo">
+        <div class="ficha-motivo-label">Motivo de Consulta</div>
+        <div class="ficha-motivo-text">${o.motivo||'—'}</div>
+      </div>`;
+    document.getElementById('modal-ficha').classList.add('open');
+  } else if(type==='gasto'){
+    document.getElementById('gasto-id').value='';
+    document.getElementById('gasto-cat').value='';
+    document.getElementById('gasto-monto').value='';
+    document.getElementById('gasto-fecha').value=t;
+    document.getElementById('gasto-desc').value='';
+    document.getElementById('gasto-eq-nombre').value='';
+    updateGastoFields();
+    document.getElementById('modal-gasto').classList.add('open');
+  } else if(type==='equipo'){
+    const editId=id||'';
+    document.getElementById('equipo-id').value=editId;
+    document.getElementById('equipo-modal-title').textContent=editId?'Editar Equipo':'Nuevo Equipo';
+    ['eq-nombre','eq-funcion','eq-prov'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('eq-fecha').value=t;
+    if(editId){
+      const e=equipos.find(x=>x.id===editId);
+      if(e){
+        document.getElementById('eq-nombre').value=e.nombre||'';
+        document.getElementById('eq-funcion').value=e.funcion||'';
+        document.getElementById('eq-prov').value=e.proveedor||'';
+        document.getElementById('eq-fecha').value=e.fecha||'';
+      }
+    }
+    document.getElementById('modal-equipo').classList.add('open');
+  }
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalBg(e,id){if(e.target.id===id)closeModal(id);}
+function updateGastoFields(){
+  const cat=document.getElementById('gasto-cat').value;
+  document.getElementById('gasto-sp-fields').style.display  = cat==='sp'  ?'block':'none';
+  document.getElementById('gasto-adm-fields').style.display = cat==='adm' ?'block':'none';
+  document.getElementById('gasto-eq-fields').style.display  = cat==='eq'  ?'block':'none';
+}
+
+// ═══════════ PAGO MÚLTIPLE ═══════════
+function toggleService(cat){
+  const chk=document.getElementById(`chk-${cat}`);
+  const fields=document.getElementById(`fields-${cat}`);
+  const row=document.getElementById(`svc-${cat}`);
+  fields.style.display=chk.checked?'flex':'none';
+  row.classList.toggle('checked',chk.checked);
+  if(chk.checked){
+    const dateEl=document.getElementById(`${cat}-fecha`);
+    if(dateEl&&!dateEl.value) dateEl.value=today();
+  }
+  calcTotal();
+}
+function calcTotal(){
+  let total=0;
+  ['con','sdm','gym','otro'].forEach(cat=>{
+    if(document.getElementById(`chk-${cat}`)?.checked){
+      total+=parseFloat(document.getElementById(`${cat}-monto`)?.value||0);
+    }
+  });
+  document.getElementById('pago-total-display').textContent=fmt(total);
+}
+
+function registrarPagoMultiple(){
+  const clienteNombre=document.getElementById('pago-client-name').value.trim();
+  const clienteId=document.getElementById('pago-client-id').value;
+  if(!clienteNombre){toast('Seleccione un cliente de la lista');return;}
+  const servicios=['con','sdm','gym','otro'];
+  const seleccionados=servicios.filter(cat=>document.getElementById(`chk-${cat}`)?.checked);
+  if(!seleccionados.length){toast('Seleccione al menos un servicio');return;}
+  let errores=[];
+  seleccionados.forEach(cat=>{
+    const monto=parseFloat(document.getElementById(`${cat}-monto`)?.value||0);
+    const fecha=document.getElementById(`${cat}-fecha`)?.value;
+    if(!monto||monto<=0) errores.push(cat);
+    else if(!fecha) errores.push(cat+'-fecha');
+  });
+  if(errores.length){toast('Complete el monto y fecha de cada servicio seleccionado');return;}
+  let total=0;
+  seleccionados.forEach(cat=>{
+    const monto=parseFloat(document.getElementById(`${cat}-monto`).value);
+    const fecha=document.getElementById(`${cat}-fecha`).value;
+    const conceptoEl=document.getElementById(`${cat}-concepto`);
+    const concepto=conceptoEl?conceptoEl.value:(document.getElementById(`${cat}-concepto`)?.value||'Otro');
+    ingresos.push({id:uid(),cat,monto,fecha,concepto,cliente:clienteNombre,clienteId,desc:''});
+    total+=monto;
+  });
+  DB.save('mm_ingresos',ingresos);
+  // Reset
+  clearClient('pago');
+  seleccionados.forEach(cat=>{
+    document.getElementById(`chk-${cat}`).checked=false;
+    document.getElementById(`fields-${cat}`).style.display='none';
+    document.getElementById(`svc-${cat}`).classList.remove('checked');
+    document.getElementById(`${cat}-monto`).value='';
+    if(cat==='otro') document.getElementById('otro-concepto').value='';
+  });
+  document.getElementById('pago-total-display').textContent='₡0';
+  renderIngresos();
+  toast(`✓ ${seleccionados.length} pago(s) registrados — Total: ${fmt(total)}`);
+}
+
+// ═══════════ CLIENT SEARCH DROPDOWN ═══════════
+function searchClientDrop(prefix){
+  const q=document.getElementById(`${prefix}-cl-search`).value.trim().toLowerCase();
+  const dd=document.getElementById(`${prefix}-dropdown`);
+  if(!q){dd.classList.remove('open');return;}
+  const results=clientes.filter(c=>
+    c.nombre.toLowerCase().includes(q)||c.identificacion.toLowerCase().includes(q)
+  ).slice(0,8);
+  if(!results.length){
+    dd.innerHTML='<div class="client-dropdown-item" style="color:var(--gray-500)">Sin resultados</div>';
+    dd.classList.add('open');return;
+  }
+  dd.innerHTML=results.map(c=>`
+    <div class="client-dropdown-item" onclick="selectClient('${prefix}','${esc(c.id)}','${esc(c.nombre)}','${esc(c.identificacion)}')">
+      <strong>${c.nombre}</strong><br/><small>${c.identificacion}</small>
+    </div>`).join('');
+  dd.classList.add('open');
+}
+function selectClient(prefix,id,nombre,ident){
+  document.getElementById(`${prefix}-client-id`).value=id;
+  document.getElementById(`${prefix}-client-name`).value=nombre;
+  document.getElementById(`${prefix}-cl-search`).value='';
+  document.getElementById(`${prefix}-dropdown`).classList.remove('open');
+  const sel=document.getElementById(`${prefix}-selected`);
+  sel.style.display='block';
+  sel.innerHTML=`<div class="client-selected-badge">👤 ${nombre} <small>(${ident})</small>
+    <button onclick="clearClient('${prefix}')">✕</button></div>`;
+}
+function clearClient(prefix){
+  document.getElementById(`${prefix}-client-id`).value='';
+  document.getElementById(`${prefix}-client-name`).value='';
+  const s=document.getElementById(`${prefix}-selected`);
+  if(s){s.style.display='none';s.innerHTML='';}
+  const si=document.getElementById(`${prefix}-cl-search`);
+  if(si) si.value='';
+}
+document.addEventListener('click',e=>{
+  ['pago'].forEach(p=>{
+    const dd=document.getElementById(`${p}-dropdown`);
+    const inp=document.getElementById(`${p}-cl-search`);
+    if(dd&&!dd.contains(e.target)&&e.target!==inp) dd.classList.remove('open');
+  });
+});
+
+// ═══════════ SAVES ═══════════
+function saveCliente(){
+  const nombre=document.getElementById('cl-nombre').value.trim();
+  const idNum =document.getElementById('cl-id').value.trim();
+  if(!nombre||!idNum){toast('Complete nombre e identificación');return;}
+  const editId=document.getElementById('cliente-id').value;
+  const obs={
+    edad:     document.getElementById('cl-edad').value,
+    peso:     document.getElementById('cl-peso').value,
+    estatura: document.getElementById('cl-estatura').value,
+    pa:       document.getElementById('cl-pa').value.trim(),
+    fc:       document.getElementById('cl-fc').value,
+    medico:   document.getElementById('cl-medico').value.trim(),
+    motivo:   document.getElementById('cl-motivo').value.trim()
+  };
+  const obj={id:editId||uid(),nombre,identificacion:idNum,
+    telefono:document.getElementById('cl-tel').value.trim(),
+    email:document.getElementById('cl-email').value.trim(),
+    fecha:document.getElementById('cl-fecha').value,obs};
+  if(editId) clientes=clientes.map(x=>x.id===editId?obj:x);
+  else clientes.push(obj);
+  DB.save('mm_clientes',clientes);
+  closeModal('modal-cliente'); renderClientes();
+  toast(editId?'Cliente actualizado':'Cliente registrado');
+}
+function saveProfesional(){
+  const nombre=document.getElementById('pr-nombre').value.trim();
+  const esp   =document.getElementById('pr-esp').value.trim();
+  if(!nombre||!esp){toast('Complete nombre y especialidad');return;}
+  const editId=document.getElementById('prof-id').value;
+  const obj={id:editId||uid(),nombre,especialidad:esp,
+    identificacion:document.getElementById('pr-id').value.trim(),
+    telefono:document.getElementById('pr-tel').value.trim(),
+    email:document.getElementById('pr-email').value.trim(),
+    fecha:document.getElementById('pr-fecha').value};
+  if(editId) profesionales=profesionales.map(x=>x.id===editId?obj:x);
+  else profesionales.push(obj);
+  DB.save('mm_profesionales',profesionales);
+  closeModal('modal-profesional'); renderProfesionales();
+  toast(editId?'Profesional actualizado':'Profesional registrado');
+}
+function saveComision(){
+  const profId=document.getElementById('comision-prof-id').value;
+  const profNombre=document.getElementById('comision-prof-nombre').value;
+  const monto=parseFloat(document.getElementById('comision-monto').value);
+  const fecha=document.getElementById('comision-fecha').value;
+  const concepto=document.getElementById('comision-concepto').value;
+  if(!monto||monto<=0){toast('Ingrese un monto válido');return;}
+  if(!fecha){toast('Seleccione la fecha');return;}
+  ingresos.push({id:uid(),cat:'com',monto,fecha,concepto,
+    cliente:profNombre,clienteId:profId,
+    desc:document.getElementById('comision-desc').value.trim()});
+  DB.save('mm_ingresos',ingresos);
+  closeModal('modal-comision'); renderIngresos(); renderProfesionales();
+  toast(`Comisión de ${fmt(monto)} registrada`);
+}
+function saveGasto(){
+  const cat  =document.getElementById('gasto-cat').value;
+  const monto=document.getElementById('gasto-monto').value;
+  const fecha=document.getElementById('gasto-fecha').value;
+  if(!cat||!monto||!fecha){toast('Complete los campos obligatorios');return;}
+  const obj={id:uid(),cat,monto:parseFloat(monto),fecha,
+    desc:document.getElementById('gasto-desc').value.trim(),
+    spTipo:document.getElementById('gasto-sp-tipo').value,
+    admTipo:document.getElementById('gasto-adm-tipo').value,
+    eqTipo:document.getElementById('gasto-eq-tipo').value,
+    eqNombre:document.getElementById('gasto-eq-nombre').value.trim()};
+  gastos.push(obj);
+  DB.save('mm_gastos',gastos);
+  closeModal('modal-gasto'); renderGastos();
+  toast('Gasto registrado');
+}
+function saveEquipo(){
+  const nombre=document.getElementById('eq-nombre').value.trim();
+  if(!nombre){toast('El nombre del equipo es obligatorio');return;}
+  const editId=document.getElementById('equipo-id').value;
+  const obj={id:editId||uid(),nombre,
+    funcion:document.getElementById('eq-funcion').value.trim(),
+    proveedor:document.getElementById('eq-prov').value.trim(),
+    fecha:document.getElementById('eq-fecha').value};
+  if(editId) equipos=equipos.map(x=>x.id===editId?obj:x);
+  else equipos.push(obj);
+  DB.save('mm_equipos',equipos);
+  closeModal('modal-equipo'); renderEquipos();
+  toast(editId?'Equipo actualizado':'Equipo registrado');
+}
+
+// ═══════════ DELETES ═══════════
+function deleteCliente(id){if(!confirm('¿Eliminar este cliente?'))return;clientes=clientes.filter(x=>x.id!==id);DB.save('mm_clientes',clientes);renderClientes();toast('Cliente eliminado');}
+function deleteProfesional(id){if(!confirm('¿Eliminar?'))return;profesionales=profesionales.filter(x=>x.id!==id);DB.save('mm_profesionales',profesionales);renderProfesionales();toast('Profesional eliminado');}
+function deleteGasto(id){if(!confirm('¿Eliminar?'))return;gastos=gastos.filter(x=>x.id!==id);DB.save('mm_gastos',gastos);renderGastos();toast('Gasto eliminado');}
+function deleteIngreso(id){if(!confirm('¿Eliminar?'))return;ingresos=ingresos.filter(x=>x.id!==id);DB.save('mm_ingresos',ingresos);renderIngresos();renderProfesionales();toast('Registro eliminado');}
+function deleteEquipo(id){if(!confirm('¿Eliminar?'))return;equipos=equipos.filter(x=>x.id!==id);DB.save('mm_equipos',equipos);renderEquipos();toast('Equipo eliminado');}
+
+// ═══════════ RENDERS ═══════════
+function renderClientes(){
+  const q=(document.getElementById('clientes-search')?.value||'').trim().toLowerCase();
+  const filtered=q?clientes.filter(c=>c.nombre.toLowerCase().includes(q)||c.identificacion.toLowerCase().includes(q)):clientes;
+  const tbody=document.getElementById('clientes-tbody');
+  const empty=document.getElementById('clientes-empty');
+  document.getElementById('clientes-count').textContent=clientes.length;
+  if(!filtered.length){
+    tbody.innerHTML=''; empty.style.display='block';
+    empty.querySelector('p').textContent=q?`Sin resultados para "${q}"`:'No hay clientes registrados';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(c=>`<tr>
+    <td><strong>${c.nombre}</strong></td>
+    <td>${c.identificacion}</td>
+    <td>${c.telefono||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td>${fmtDate(c.fecha)}</td>
+    <td><div class="actions">
+      <button class="btn btn-view" onclick="openModal('ficha','${c.id}')">👁️ Ficha</button>
+      <button class="btn btn-edit" onclick="openModal('cliente','${c.id}')">✏️</button>
+      <button class="btn btn-danger" onclick="deleteCliente('${c.id}')">🗑️</button>
+    </div></td></tr>`).join('');
+}
+
+function renderProfesionales(){
+  const q=(document.getElementById('prof-search')?.value||'').trim().toLowerCase();
+  const filtered=q?profesionales.filter(p=>p.nombre.toLowerCase().includes(q)||p.especialidad.toLowerCase().includes(q)):profesionales;
+  const tbody=document.getElementById('prof-tbody');
+  const empty=document.getElementById('prof-empty');
+  document.getElementById('prof-count').textContent=profesionales.length;
+  if(!filtered.length){
+    tbody.innerHTML=''; empty.style.display='block';
+    empty.querySelector('p').textContent=q?`Sin resultados para "${q}"`:'No hay profesionales registrados';
+    return;
+  }
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(p=>{
+    const comTotal=ingresos.filter(i=>i.cat==='com'&&i.clienteId===p.id).reduce((s,i)=>s+i.monto,0);
+    return `<tr>
+      <td><strong>${p.nombre}</strong></td>
+      <td><span class="badge badge-teal">${p.especialidad}</span></td>
+      <td>${p.identificacion||'—'}</td>
+      <td>${p.telefono||'—'}</td>
+      <td>${fmtDate(p.fecha)}</td>
+      <td><span class="badge badge-green">${fmt(comTotal)}</span></td>
+      <td><div class="actions">
+        <button class="btn btn-comision" onclick="openModal('comision','${p.id}')">💰 Comisión</button>
+        <button class="btn btn-edit" onclick="openModal('profesional','${p.id}')">✏️</button>
+        <button class="btn btn-danger" onclick="deleteProfesional('${p.id}')">🗑️</button>
+      </div></td></tr>`;
+  }).join('');
+}
+
+function renderGastos(){
+  const spRows =gastos.filter(g=>g.cat==='sp');
+  const alqRows=gastos.filter(g=>g.cat==='alq');
+  const admRows=gastos.filter(g=>g.cat==='adm');
+  const eqRows =gastos.filter(g=>g.cat==='eq');
+  const nd=n=>`<tr><td colspan="${n}" style="text-align:center;color:var(--gray-500);padding:22px">Sin registros</td></tr>`;
+  document.getElementById('gastos-sp-tbody').innerHTML=spRows.length
+    ?spRows.map(g=>`<tr><td><span class="badge badge-teal">${g.spTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}')">🗑️</button></td></tr>`).join(''):nd(5);
+  document.getElementById('gastos-alq-tbody').innerHTML=alqRows.length
+    ?alqRows.map(g=>`<tr><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}')">🗑️</button></td></tr>`).join(''):nd(4);
+  document.getElementById('gastos-adm-tbody').innerHTML=admRows.length
+    ?admRows.map(g=>`<tr><td><span class="badge badge-navy">${g.admTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}')">🗑️</button></td></tr>`).join(''):nd(5);
+  document.getElementById('gastos-eq-tbody').innerHTML=eqRows.length
+    ?eqRows.map(g=>`<tr><td><span class="badge badge-navy">${g.eqTipo}</span></td><td>${g.eqNombre||'—'}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}')">🗑️</button></td></tr>`).join(''):nd(6);
+  document.getElementById('total-gastos').textContent=fmt(gastos.reduce((s,g)=>s+g.monto,0));
+  document.getElementById('total-sp').textContent=fmt(spRows.reduce((s,g)=>s+g.monto,0));
+  document.getElementById('total-alq').textContent=fmt(alqRows.reduce((s,g)=>s+g.monto,0));
+  document.getElementById('total-adm').textContent=fmt(admRows.reduce((s,g)=>s+g.monto,0));
+  document.getElementById('total-eq-g').textContent=fmt(eqRows.reduce((s,g)=>s+g.monto,0));
+}
+
+function renderIngresosTab(cat,id){
+  const rows=ingresos.filter(i=>i.cat===cat).slice().reverse();
+  const nd=`<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:22px">Sin registros</td></tr>`;
+  document.getElementById(id).innerHTML=rows.length
+    ?rows.map(i=>`<tr><td><strong>${i.cliente||'—'}</strong></td><td><span class="badge badge-teal">${i.concepto||'—'}</span></td><td>${fmt(i.monto)}</td><td>${fmtDate(i.fecha)}</td><td><button class="btn btn-danger" onclick="deleteIngreso('${i.id}')">🗑️</button></td></tr>`).join('')
+    :nd;
+}
+function renderIngresos(){
+  renderIngresosTab('sdm','ingresos-sdm-tbody');
+  renderIngresosTab('con','ingresos-con-tbody');
+  renderIngresosTab('com','ingresos-com-tbody');
+  renderIngresosTab('gym','ingresos-gym-tbody');
+  renderIngresosTab('otro','ingresos-otro-tbody');
+  document.getElementById('total-ingresos').textContent=fmt(ingresos.reduce((s,i)=>s+i.monto,0));
+  document.getElementById('total-consultas').textContent=fmt(ingresos.filter(i=>i.cat==='con').reduce((s,i)=>s+i.monto,0));
+  document.getElementById('total-gym').textContent=fmt(ingresos.filter(i=>i.cat==='gym').reduce((s,i)=>s+i.monto,0));
+  document.getElementById('total-dom').textContent=fmt(ingresos.filter(i=>i.cat==='sdm').reduce((s,i)=>s+i.monto,0));
+  document.getElementById('total-com').textContent=fmt(ingresos.filter(i=>i.cat==='com').reduce((s,i)=>s+i.monto,0));
+  document.getElementById('total-otro').textContent=fmt(ingresos.filter(i=>i.cat==='otro').reduce((s,i)=>s+i.monto,0));
+}
+function renderEquipos(){
+  const tbody=document.getElementById('equipos-tbody');
+  const empty=document.getElementById('equipos-empty');
+  document.getElementById('equipos-count').textContent=equipos.length;
+  if(!equipos.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=equipos.map(e=>`<tr>
+    <td><strong>${e.nombre}</strong></td><td>${e.funcion||'—'}</td>
+    <td>${e.proveedor||'—'}</td><td>${fmtDate(e.fecha)}</td>
+    <td><div class="actions">
+      <button class="btn btn-edit" onclick="openModal('equipo','${e.id}')">✏️ Editar</button>
+      <button class="btn btn-danger" onclick="deleteEquipo('${e.id}')">🗑️</button>
+    </div></td></tr>`).join('');
+}
+function renderAll(){renderClientes();renderProfesionales();renderGastos();renderIngresos();renderEquipos();}
+
+// ═══════════ REPORTES ═══════════
+const rpStyles=`
+  body{font-family:Arial,sans-serif;padding:28px;color:#1a1a4e;font-size:13px;}
+  h1{font-size:20px;color:#2D2D7B;margin-bottom:2px;}
+  .sub{font-size:12px;color:#8890b0;margin-bottom:18px;}
+  h2{font-size:14px;color:#2D2D7B;margin:18px 0 8px;border-bottom:2px solid #eef0f7;padding-bottom:4px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;}
+  th{background:#2D2D7B;color:white;padding:8px 10px;text-align:left;font-size:11px;}
+  td{padding:8px 10px;border-bottom:1px solid #eef0f7;}
+  tr:hover td{background:#f8f9fc;}
+  .total{font-weight:700;color:#2D2D7B;}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+  .scard{background:#f8f9fc;border-left:3px solid #00BFA5;padding:10px 14px;border-radius:6px;min-width:130px;}
+  .scard.navy{border-left-color:#2D2D7B;}
+  .scard-label{font-size:10px;color:#8890b0;font-weight:700;text-transform:uppercase;margin-bottom:3px;}
+  .scard-val{font-size:17px;font-weight:700;color:#2D2D7B;}
+  @media print{@page{margin:18mm;size:A4;}}`;
+
+function openReport(titulo, cuerpo){
+  const fecha = new Date().toLocaleDateString('es-CR',{year:'numeric',month:'long',day:'numeric'});
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+    <title>${titulo}</title>
+    <style>
+      ${rpStyles}
+      body{padding:32px 40px;}
+      @media print{
+        body{padding:0;}
+        @page{margin:15mm;size:A4;}
+      }
+    </style>
+  </head><body>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px">
+      <svg width="38" height="38" viewBox="0 0 46 46" fill="none">
+        <circle cx="23" cy="23" r="21" stroke="#2D2D7B" stroke-width="2.5" fill="white"/>
+        <polyline points="3,27 9,27 12,19 15,33 18,15 21,31 24,27 43,27"
+          stroke="#00BFA5" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1 style="margin:0">MotionMed — ${titulo}</h1>
+        <div class="sub" style="margin:2px 0 0">Dra. Alicia Castro M. &nbsp;|&nbsp; Clínica especializada y gimnasio grado médico &nbsp;|&nbsp; ${fecha}</div>
+      </div>
+    </div>
+    <hr style="border:none;border-top:2px solid #eef0f7;margin:14px 0 20px"/>
+    ${cuerpo}
+    <div style="text-align:center;color:#8890b0;font-size:11px;margin-top:28px;
+      border-top:1px solid #eef0f7;padding-top:10px">
+      MotionMed • Salud en movimiento
+    </div>
+  </body></html>`;
+
+  const overlay = document.getElementById('rpt-preview-overlay');
+  const frame   = document.getElementById('rpt-preview-frame');
+  document.getElementById('rpt-preview-label').textContent = titulo;
+
+  // Write into iframe
+  frame.srcdoc = html;
+
+  overlay.classList.add('open');
+  // Scroll to top
+  window.scrollTo(0,0);
+}
+
+function closePreview(){
+  document.getElementById('rpt-preview-overlay').classList.remove('open');
+}
+
+function printPreview(){
+  const frame = document.getElementById('rpt-preview-frame');
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
+}
+
+function reporteClientes(){
+  const rows=clientes.map(c=>{
+    const o=c.obs||{};
+    return `<tr>
+      <td><strong>${c.nombre}</strong></td>
+      <td>${c.identificacion}</td>
+      <td>${c.telefono||'—'}</td>
+      <td>${c.email||'—'}</td>
+      <td>${fmtDate(c.fecha)}</td>
+      <td>${o.edad?o.edad+' años':'—'}</td>
+      <td>${o.pa||'—'}</td>
+      <td>${o.medico||'—'}</td>
+    </tr>`;
+  }).join('');
+  const cuerpo=`
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Clientes</div><div class="scard-val">${clientes.length}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Nombre</th><th>Identificación</th><th>Teléfono</th><th>Correo</th><th>Ingreso</th><th>Edad</th><th>Presión</th><th>Médico Refiere</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="8" style="text-align:center">Sin registros</td></tr>'}</tbody>
+    </table>`;
+  openReport('Reporte de Clientes',cuerpo);
+}
+
+function imprimirFicha(){
+  const c=clientes.find(x=>x.id===fichaActualId);
+  if(!c)return;
+  const o=c.obs||{};
+  const pagosCliente=ingresos.filter(i=>i.clienteId===c.id);
+  const totalPagado=pagosCliente.reduce((s,i)=>s+i.monto,0);
+  const historial=pagosCliente.slice().reverse().map(i=>
+    `<tr><td>${fmtDate(i.fecha)}</td><td>${i.concepto||'—'}</td><td>${{con:'Consulta Clínica',sdm:'Domicilio',gym:'Gym',com:'Comisión'}[i.cat]||i.cat}</td><td>${fmt(i.monto)}</td></tr>`
+  ).join('');
+  const cuerpo=`
+    <h2>📋 Ficha del Cliente</h2>
+    <table><tbody>
+      <tr><td><strong>Nombre</strong></td><td>${c.nombre}</td><td><strong>Identificación</strong></td><td>${c.identificacion}</td></tr>
+      <tr><td><strong>Teléfono</strong></td><td>${c.telefono||'—'}</td><td><strong>Correo</strong></td><td>${c.email||'—'}</td></tr>
+      <tr><td><strong>Fecha Ingreso</strong></td><td>${fmtDate(c.fecha)}</td><td></td><td></td></tr>
+    </tbody></table>
+    <h2>🩺 Observaciones Clínicas</h2>
+    <table><tbody>
+      <tr><td><strong>Edad</strong></td><td>${o.edad?o.edad+' años':'—'}</td><td><strong>Peso</strong></td><td>${o.peso?o.peso+' kg':'—'}</td></tr>
+      <tr><td><strong>Estatura</strong></td><td>${o.estatura?o.estatura+' cm':'—'}</td><td><strong>Presión Arterial</strong></td><td>${o.pa||'—'}</td></tr>
+      <tr><td><strong>Frec. Cardiaca</strong></td><td>${o.fc?o.fc+' lpm':'—'}</td><td><strong>Médico que Refiere</strong></td><td>${o.medico||'—'}</td></tr>
+    </tbody></table>
+    <p style="margin:10px 0 4px"><strong>Motivo de Consulta:</strong></p>
+    <p style="background:#f8f9fc;padding:10px;border-radius:6px;margin-bottom:18px">${o.motivo||'—'}</p>
+    <h2>💰 Historial de Pagos — Total: <span style="color:#00BFA5">${fmt(totalPagado)}</span></h2>
+    <table><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Monto</th></tr></thead>
+    <tbody>${historial||'<tr><td colspan="4" style="text-align:center">Sin pagos registrados</td></tr>'}</tbody>
+    </table>`;
+  openReport(`Ficha — ${c.nombre}`,cuerpo);
+}
+
+function reporteProfesionales(){
+  const rows=profesionales.map(p=>{
+    const comTotal=ingresos.filter(i=>i.cat==='com'&&i.clienteId===p.id).reduce((s,i)=>s+i.monto,0);
+    return `<tr><td><strong>${p.nombre}</strong></td><td>${p.especialidad}</td>
+      <td>${p.identificacion||'—'}</td><td>${p.telefono||'—'}</td>
+      <td>${fmtDate(p.fecha)}</td><td class="total">${fmt(comTotal)}</td></tr>`;
+  }).join('');
+  const totalCom=ingresos.filter(i=>i.cat==='com').reduce((s,i)=>s+i.monto,0);
+  const detalleRows=ingresos.filter(i=>i.cat==='com').slice().reverse().map(i=>
+    `<tr><td>${i.cliente||'—'}</td><td>${i.concepto||'—'}</td><td>${fmt(i.monto)}</td><td>${fmtDate(i.fecha)}</td></tr>`
+  ).join('');
+  const cuerpo=`
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Profesionales</div><div class="scard-val">${profesionales.length}</div></div>
+      <div class="scard navy"><div class="scard-label">Total Comisiones</div><div class="scard-val">${fmt(totalCom)}</div></div>
+    </div>
+    <table><thead><tr><th>Nombre</th><th>Especialidad</th><th>Identificación</th><th>Teléfono</th><th>Inicio</th><th>Comisiones</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" style="text-align:center">Sin registros</td></tr>'}</tbody></table>
+    <h2>Detalle de Comisiones</h2>
+    <table><thead><tr><th>Profesional</th><th>Concepto</th><th>Monto</th><th>Fecha</th></tr></thead>
+    <tbody>${detalleRows||'<tr><td colspan="4" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Profesionales',cuerpo);
+}
+
+function reporteGastos(){
+  const cats={sp:'Servicios Públicos',alq:'Alquiler',adm:'Administrativos',eq:'Equipos'};
+  const totales=Object.fromEntries(Object.keys(cats).map(k=>[k,gastos.filter(g=>g.cat===k).reduce((s,g)=>s+g.monto,0)]));
+  const total=gastos.reduce((s,g)=>s+g.monto,0);
+  const detalle=gastos.slice().reverse().map(g=>{
+    const tipo=g.spTipo||g.admTipo||g.eqTipo||'—';
+    return `<tr><td>${cats[g.cat]}</td><td>${tipo}</td><td>${g.eqNombre||'—'}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td></tr>`;
+  }).join('');
+  const cuerpo=`
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Gastos</div><div class="scard-val">${fmt(total)}</div></div>
+      <div class="scard navy"><div class="scard-label">Serv. Públicos</div><div class="scard-val">${fmt(totales.sp)}</div></div>
+      <div class="scard"><div class="scard-label">Alquiler</div><div class="scard-val">${fmt(totales.alq)}</div></div>
+      <div class="scard navy"><div class="scard-label">Administrativos</div><div class="scard-val">${fmt(totales.adm)}</div></div>
+      <div class="scard"><div class="scard-label">Equipos</div><div class="scard-val">${fmt(totales.eq)}</div></div>
+    </div>
+    <table><thead><tr><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th></tr></thead>
+    <tbody>${detalle||'<tr><td colspan="6" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Gastos',cuerpo);
+}
+
+function reporteIngresos(){
+  const catLabels={sdm:'Domicilio',con:'Consultas Clínica',com:'Comisiones',gym:'Gym'};
+  const totales=Object.fromEntries(Object.keys(catLabels).map(k=>[k,ingresos.filter(i=>i.cat===k).reduce((s,i)=>s+i.monto,0)]));
+  const total=ingresos.reduce((s,i)=>s+i.monto,0);
+  const detalle=ingresos.slice().reverse().map(i=>
+    `<tr><td>${catLabels[i.cat]||i.cat}</td><td>${i.cliente||'—'}</td><td>${i.concepto||'—'}</td><td>${fmt(i.monto)}</td><td>${fmtDate(i.fecha)}</td></tr>`
+  ).join('');
+  const cuerpo=`
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Ingresos</div><div class="scard-val">${fmt(total)}</div></div>
+      <div class="scard navy"><div class="scard-label">Consultas</div><div class="scard-val">${fmt(totales.con)}</div></div>
+      <div class="scard"><div class="scard-label">Domicilio</div><div class="scard-val">${fmt(totales.sdm)}</div></div>
+      <div class="scard navy"><div class="scard-label">Gym</div><div class="scard-val">${fmt(totales.gym)}</div></div>
+      <div class="scard"><div class="scard-label">Comisiones</div><div class="scard-val">${fmt(totales.com)}</div></div>
+    </div>
+    <table><thead><tr><th>Categoría</th><th>Cliente / Fuente</th><th>Concepto</th><th>Monto</th><th>Fecha</th></tr></thead>
+    <tbody>${detalle||'<tr><td colspan="5" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Ingresos',cuerpo);
+}
+
+function reporteEquipos(){
+  const rows=equipos.map(e=>`<tr>
+    <td><strong>${e.nombre}</strong></td><td>${e.funcion||'—'}</td>
+    <td>${e.proveedor||'—'}</td><td>${fmtDate(e.fecha)}</td>
+  </tr>`).join('');
+  const gastosEquipos=gastos.filter(g=>g.cat==='eq');
+  const totalMantenimiento=gastosEquipos.filter(g=>g.eqTipo==='Mantenimiento de equipo').reduce((s,g)=>s+g.monto,0);
+  const totalCompras=gastosEquipos.filter(g=>g.eqTipo==='Compra de equipo').reduce((s,g)=>s+g.monto,0);
+  const gastoRows=gastosEquipos.slice().reverse().map(g=>
+    `<tr><td>${g.eqNombre||'—'}</td><td>${g.eqTipo}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td></tr>`
+  ).join('');
+  const cuerpo=`
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Equipos</div><div class="scard-val">${equipos.length}</div></div>
+      <div class="scard navy"><div class="scard-label">Gasto Compras</div><div class="scard-val">${fmt(totalCompras)}</div></div>
+      <div class="scard"><div class="scard-label">Mantenimientos</div><div class="scard-val">${fmt(totalMantenimiento)}</div></div>
+    </div>
+    <h2>Inventario de Equipos</h2>
+    <table><thead><tr><th>Nombre</th><th>Función</th><th>Proveedor</th><th>Fecha Compra</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" style="text-align:center">Sin equipos</td></tr>'}</tbody></table>
+    <h2>Historial de Gastos en Equipos</h2>
+    <table><thead><tr><th>Equipo</th><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Notas</th></tr></thead>
+    <tbody>${gastoRows||'<tr><td colspan="5" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Equipos',cuerpo);
+}
+
+// ═══════════ TOAST ═══════════
+let toastT;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ═══════════ REPORTES MODULE ═══════════
+function getFechaFiltro(){
+  return {
+    desde: document.getElementById('rpt-desde')?.value||'',
+    hasta: document.getElementById('rpt-hasta')?.value||''
+  };
+}
+function limpiarFiltroFecha(){
+  document.getElementById('rpt-desde').value='';
+  document.getElementById('rpt-hasta').value='';
+}
+function filtrarPorFecha(arr,campo='fecha'){
+  const {desde,hasta}=getFechaFiltro();
+  return arr.filter(x=>{
+    if(desde&&x[campo]&&x[campo]<desde) return false;
+    if(hasta&&x[campo]&&x[campo]>hasta) return false;
+    return true;
+  });
+}
+function periodoLabel(){
+  const {desde,hasta}=getFechaFiltro();
+  if(desde&&hasta) return `Período: ${fmtDate(desde)} — ${fmtDate(hasta)}`;
+  if(desde) return `Desde: ${fmtDate(desde)}`;
+  if(hasta) return `Hasta: ${fmtDate(hasta)}`;
+  return 'Todos los registros';
+}
+
+function showFichaSearch(){
+  document.getElementById('rpt-ficha-search').style.display='block';
+  document.getElementById('rpt-pagos-search').style.display='none';
+  document.getElementById('rpt-ficha-q').value='';
+  document.getElementById('rpt-ficha-results').innerHTML='';
+  setTimeout(()=>document.getElementById('rpt-ficha-q').focus(),100);
+}
+function showPagosClienteSearch(){
+  document.getElementById('rpt-pagos-search').style.display='block';
+  document.getElementById('rpt-ficha-search').style.display='none';
+  document.getElementById('rpt-pagos-q').value='';
+  document.getElementById('rpt-pagos-results').innerHTML='';
+  setTimeout(()=>document.getElementById('rpt-pagos-q').focus(),100);
+}
+function rptFichaFilter(){
+  const q=document.getElementById('rpt-ficha-q').value.trim().toLowerCase();
+  const res=document.getElementById('rpt-ficha-results');
+  if(!q){res.innerHTML='';return;}
+  const found=clientes.filter(c=>c.nombre.toLowerCase().includes(q)||c.identificacion.toLowerCase().includes(q));
+  if(!found.length){res.innerHTML='<div style="padding:14px;color:var(--gray-500)">Sin resultados</div>';return;}
+  res.innerHTML=found.map(c=>`<div class="rpt-result-item" onclick="openModal('ficha','${c.id}')">
+    <div><strong>${c.nombre}</strong><br/><small style="color:var(--gray-500)">${c.identificacion}</small></div>
+    <span style="color:var(--teal);font-size:13px;font-weight:700">Ver ficha →</span>
+  </div>`).join('');
+}
+function rptPagosFilter(){
+  const q=document.getElementById('rpt-pagos-q').value.trim().toLowerCase();
+  const res=document.getElementById('rpt-pagos-results');
+  if(!q){res.innerHTML='';return;}
+  const found=clientes.filter(c=>c.nombre.toLowerCase().includes(q)||c.identificacion.toLowerCase().includes(q));
+  if(!found.length){res.innerHTML='<div style="padding:14px;color:var(--gray-500)">Sin resultados</div>';return;}
+  res.innerHTML=found.map(c=>`<div class="rpt-result-item" onclick="reportePagosCliente('${c.id}')">
+    <div><strong>${c.nombre}</strong><br/><small style="color:var(--gray-500)">${c.identificacion}</small></div>
+    <span style="color:var(--teal);font-size:13px;font-weight:700">Ver pagos →</span>
+  </div>`).join('');
+}
+
+function reportePagosCliente(clienteId){
+  const c=clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  const catLabels={sdm:'Domicilio',con:'Consulta Clínica',gym:'Gym',otro:'Otros',com:'Comisión'};
+  const pagos=filtrarPorFecha(ingresos.filter(i=>i.clienteId===clienteId));
+  const total=pagos.reduce((s,i)=>s+i.monto,0);
+  const rows=pagos.slice().reverse().map(i=>`<tr>
+    <td>${fmtDate(i.fecha)}</td>
+    <td>${catLabels[i.cat]||i.cat}</td>
+    <td>${i.concepto||'—'}</td>
+    <td class="total">${fmt(i.monto)}</td>
+  </tr>`).join('');
+  // totals by cat
+  const byCat=Object.entries(catLabels).map(([k,v])=>{
+    const t=pagos.filter(i=>i.cat===k).reduce((s,i)=>s+i.monto,0);
+    return t>0?`<div class="scard"><div class="scard-label">${v}</div><div class="scard-val">${fmt(t)}</div></div>`:'';
+  }).join('');
+  const cuerpo=`
+    <h2>👤 ${c.nombre} &nbsp;|&nbsp; ${c.identificacion}</h2>
+    <p style="color:var(--gray-500);font-size:12px;margin-bottom:14px">${periodoLabel()}</p>
+    <div class="stats">
+      <div class="scard navy"><div class="scard-label">Total Pagado</div><div class="scard-val">${fmt(total)}</div></div>
+      <div class="scard"><div class="scard-label">Nº Transacciones</div><div class="scard-val">${pagos.length}</div></div>
+      ${byCat}
+    </div>
+    <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Concepto</th><th>Monto</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" style="text-align:center">Sin pagos en este período</td></tr>'}</tbody></table>`;
+  openReport(`Pagos — ${c.nombre}`,cuerpo);
+}
+
+function reporteBalance(){
+  const ing=filtrarPorFecha(ingresos);
+  const gas=filtrarPorFecha(gastos);
+  const totalIng=ing.reduce((s,i)=>s+i.monto,0);
+  const totalGas=gas.reduce((s,g)=>s+g.monto,0);
+  const utilidad=totalIng-totalGas;
+  const catIngLabels={sdm:'Domicilio',con:'Consultas Clínica',gym:'Gym',otro:'Otros',com:'Comisiones'};
+  const catGasLabels={sp:'Servicios Públicos',alq:'Alquiler',adm:'Administrativos',eq:'Equipos'};
+  const ingRows=Object.entries(catIngLabels).map(([k,v])=>{
+    const t=ing.filter(i=>i.cat===k).reduce((s,i)=>s+i.monto,0);
+    return `<tr><td>${v}</td><td style="text-align:right;color:#16a34a;font-weight:600">${fmt(t)}</td></tr>`;
+  }).join('');
+  const gasRows=Object.entries(catGasLabels).map(([k,v])=>{
+    const t=gas.filter(g=>g.cat===k).reduce((s,g)=>s+g.monto,0);
+    return `<tr><td>${v}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(t)}</td></tr>`;
+  }).join('');
+  const color=utilidad>=0?'#16a34a':'#dc2626';
+  const cuerpo=`
+    <p style="color:#8890b0;font-size:12px;margin-bottom:16px">${periodoLabel()}</p>
+    <div class="stats">
+      <div class="scard"><div class="scard-label">TOTAL INGRESOS</div><div class="scard-val" style="color:#16a34a">${fmt(totalIng)}</div></div>
+      <div class="scard navy"><div class="scard-label">TOTAL GASTOS</div><div class="scard-val" style="color:#dc2626">${fmt(totalGas)}</div></div>
+      <div class="scard" style="border-left-color:${color}"><div class="scard-label">${utilidad>=0?'UTILIDAD':'DÉFICIT'}</div><div class="scard-val" style="color:${color}">${fmt(Math.abs(utilidad))}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <h2 style="color:#16a34a">💰 Ingresos por Categoría</h2>
+        <table><thead><tr><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+        <tbody>${ingRows}<tr style="font-weight:700"><td>TOTAL</td><td style="text-align:right">${fmt(totalIng)}</td></tr></tbody></table>
+      </div>
+      <div>
+        <h2 style="color:#dc2626">💸 Gastos por Categoría</h2>
+        <table><thead><tr><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+        <tbody>${gasRows}<tr style="font-weight:700"><td>TOTAL</td><td style="text-align:right">${fmt(totalGas)}</td></tr></tbody></table>
+      </div>
+    </div>`;
+  openReport('Balance General',cuerpo);
+}
+
+// Override existing report functions to use date filter
+const _reporteIngresos=reporteIngresos;
+function reporteIngresos(){
+  const ing=filtrarPorFecha(ingresos);
+  const catLabels={sdm:'Domicilio',con:'Consultas Clínica',gym:'Gym',otro:'Otros',com:'Comisiones'};
+  const totales=Object.fromEntries(Object.keys(catLabels).map(k=>[k,ing.filter(i=>i.cat===k).reduce((s,i)=>s+i.monto,0)]));
+  const total=ing.reduce((s,i)=>s+i.monto,0);
+  const detalle=ing.slice().reverse().map(i=>`<tr>
+    <td>${catLabels[i.cat]||i.cat}</td><td>${i.cliente||'—'}</td>
+    <td>${i.concepto||'—'}</td><td>${fmt(i.monto)}</td><td>${fmtDate(i.fecha)}</td>
+  </tr>`).join('');
+  const cuerpo=`
+    <p style="color:#8890b0;font-size:12px;margin-bottom:14px">${periodoLabel()}</p>
+    <div class="stats">
+      <div class="scard"><div class="scard-label">TOTAL</div><div class="scard-val">${fmt(total)}</div></div>
+      ${Object.entries(catLabels).map(([k,v])=>`<div class="scard navy"><div class="scard-label">${v.toUpperCase()}</div><div class="scard-val">${fmt(totales[k])}</div></div>`).join('')}
+    </div>
+    <table><thead><tr><th>Categoría</th><th>Cliente / Fuente</th><th>Concepto</th><th>Monto</th><th>Fecha</th></tr></thead>
+    <tbody>${detalle||'<tr><td colspan="5" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Ingresos',cuerpo);
+}
+
+const _reporteGastos=reporteGastos;
+function reporteGastos(){
+  const gas=filtrarPorFecha(gastos);
+  const cats={sp:'Servicios Públicos',alq:'Alquiler',adm:'Administrativos',eq:'Equipos'};
+  const totales=Object.fromEntries(Object.keys(cats).map(k=>[k,gas.filter(g=>g.cat===k).reduce((s,g)=>s+g.monto,0)]));
+  const total=gas.reduce((s,g)=>s+g.monto,0);
+  const detalle=gas.slice().reverse().map(g=>{
+    const tipo=g.spTipo||g.admTipo||g.eqTipo||'—';
+    return `<tr><td>${cats[g.cat]}</td><td>${tipo}</td><td>${g.eqNombre||'—'}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td></tr>`;
+  }).join('');
+  const cuerpo=`
+    <p style="color:#8890b0;font-size:12px;margin-bottom:14px">${periodoLabel()}</p>
+    <div class="stats">
+      <div class="scard"><div class="scard-label">TOTAL GASTOS</div><div class="scard-val">${fmt(total)}</div></div>
+      ${Object.entries(cats).map(([k,v])=>`<div class="scard navy"><div class="scard-label">${v.toUpperCase()}</div><div class="scard-val">${fmt(totales[k])}</div></div>`).join('')}
+    </div>
+    <table><thead><tr><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th></tr></thead>
+    <tbody>${detalle||'<tr><td colspan="6" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Gastos',cuerpo);
+}
+
+// ═══════════ PWA ═══════════
+if('serviceWorker' in navigator)
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+renderAll();
+</script>
+</body>
+</html>

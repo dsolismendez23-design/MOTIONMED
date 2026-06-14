@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generar Íconos MotionMed</title></head>
+<body style="font-family:sans-serif;padding:20px;background:#f0f0f0">
+<h2>Generador de Íconos MotionMed</h2>
+<p>Haz clic en cada botón para descargar el ícono correspondiente:</p>
+<button onclick="gen(192)" style="padding:10px 20px;margin:8px;background:#2D2D7B;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">⬇️ Descargar icon-192.png</button>
+<button onclick="gen(512)" style="padding:10px 20px;margin:8px;background:#00BFA5;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">⬇️ Descargar icon-512.png</button>
+<canvas id="c" style="display:none"></canvas>
+<p id="status" style="color:green;font-weight:bold"></p>
+<p style="color:#666;font-size:13px;margin-top:20px">
+  Guarda los dos archivos descargados (<strong>icon-192.png</strong> y <strong>icon-512.png</strong>)
+  en la misma carpeta donde está el <strong>index.html</strong> de la app MotionMed.
+</p>
+
+<script>
+function gen(size) {
+  const canvas = document.getElementById('c');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Background circle
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,size,size);
+
+  // Navy circle border
+  ctx.beginPath();
+  ctx.arc(size/2,size/2,size/2-size*0.02,0,Math.PI*2);
+  ctx.strokeStyle = '#2D2D7B';
+  ctx.lineWidth = size*0.04;
+  ctx.stroke();
+
+  // ECG line (teal)
+  const s = size/44;
+  ctx.beginPath();
+  ctx.strokeStyle = '#00BFA5';
+  ctx.lineWidth = size*0.06;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // Points scaled from 44px original: 2,26 8,26 11,18 14,32 17,14 20,30 23,26 42,26
+  const pts = [[2,26],[8,26],[11,18],[14,32],[17,14],[20,30],[23,26],[42,26]];
+  ctx.moveTo(pts[0][0]*s, pts[0][1]*s);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0]*s, pts[i][1]*s);
+  ctx.stroke();
+
+  // "Motion" text
+  ctx.fillStyle = '#2D2D7B';
+  ctx.font = `bold ${size*0.13}px Arial`;
+  ctx.fillText('Motion', size*0.11, size*0.88);
+
+  // "med" text
+  ctx.fillStyle = '#00BFA5';
+  const motionW = ctx.measureText('Motion').width;
+  ctx.fillText('med', size*0.11 + motionW, size*0.88);
+
+  // Download
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `icon-${size}.png`;
+    a.click();
+    document.getElementById('status').textContent = `✓ icon-${size}.png descargado`;
+  });
+}
+</script>
+</body>
+</html>
