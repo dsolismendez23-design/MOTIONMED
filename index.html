@@ -1764,43 +1764,54 @@ function exportGastosExcel(){
   const {datos,label}=_gastosMesActual();
   const ordenados=[...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
   const total=ordenados.reduce((s,g)=>s+g.monto,0);
+  const SEP=';';  // separador latinoamericano — Excel lo abre directamente
 
-  // Encabezado del reporte (filas de título antes de la tabla)
-  const titulo=[
-    ['MotionMed — Reporte de Gastos'],
-    [`Período: ${label}`],
-    [`Total del mes: ${fmt(total)}`],
-    [],  // fila vacía separadora
-    ['Fecha','Categoría','Tipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción']
-  ];
-  const filas=ordenados.map(g=>{
-    const descFull=[g.eqNombre?`Equipo: ${g.eqNombre}`:null, g.desc||null].filter(Boolean).join(' — ')||'';
-    return [
-      fmtDate(g.fecha),
-      CATS_LABEL[g.cat]||g.cat||'',
-      g.spTipo||g.admTipo||g.eqTipo||'',
-      g.numFactura||'',
-      g.proveedor||'',
-      g.tipoComp||'',
-      g.monto,
-      descFull
-    ];
-  });
-  // Fila de totales por categoría al final
-  const totales=[
-    [],
-    ['TOTALES POR CATEGORÍA'],
-    ['','Servicios Públicos','','','','',datos.filter(g=>g.cat==='sp').reduce((s,g)=>s+g.monto,0),''],
-    ['','Alquiler','','','','',datos.filter(g=>g.cat==='alq').reduce((s,g)=>s+g.monto,0),''],
-    ['','Administrativos','','','','',datos.filter(g=>g.cat==='adm').reduce((s,g)=>s+g.monto,0),''],
-    ['','Equipos','','','','',datos.filter(g=>g.cat==='eq').reduce((s,g)=>s+g.monto,0),''],
-    ['','','','','','TOTAL',total,'']
-  ];
   const esc=v=>{
     const s=String(v==null?'':v);
-    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+    // en CSV con ; escapamos las celdas que contengan ; o " o salto de línea
+    return s.includes(SEP)||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
   };
-  const csv='﻿'+[...titulo,...filas,...totales].map(r=>r.map(esc).join(',')).join('\r\n');
+  const row=(...cols)=>cols.map(esc).join(SEP);
+
+  const sp =datos.filter(g=>g.cat==='sp' ).reduce((s,g)=>s+g.monto,0);
+  const alq=datos.filter(g=>g.cat==='alq').reduce((s,g)=>s+g.monto,0);
+  const adm=datos.filter(g=>g.cat==='adm').reduce((s,g)=>s+g.monto,0);
+  const eq =datos.filter(g=>g.cat==='eq' ).reduce((s,g)=>s+g.monto,0);
+
+  const lineas=[
+    // Encabezado
+    row('MotionMed — Reporte de Gastos','','','','','','',''),
+    row(`Período: ${label}`,            '','','','','','',''),
+    row(`Total del mes: ${fmt(total)}`, '','','','','','',''),
+    row('','','','','','','',''),
+    // Cabecera de columnas
+    row('Fecha','Categoría','Tipo','N°Factura','Proveedor','Comprobante','Monto','Descripción'),
+    // Filas de datos
+    ...ordenados.map(g=>{
+      const descFull=[g.eqNombre?`Equipo: ${g.eqNombre}`:null,g.desc||null].filter(Boolean).join(' — ')||'';
+      return row(
+        fmtDate(g.fecha),
+        CATS_LABEL[g.cat]||g.cat||'',
+        g.spTipo||g.admTipo||g.eqTipo||'',
+        g.numFactura||'',
+        g.proveedor||'',
+        g.tipoComp||'',
+        g.monto,
+        descFull
+      );
+    }),
+    // Sección totales
+    row('','','','','','','',''),
+    row('TOTALES POR CATEGORÍA','','','','','','',''),
+    row('Categoría','Monto Total','','','','','',''),
+    row('Servicios Públicos',sp,'','','','','',''),
+    row('Alquiler',alq,'','','','','',''),
+    row('Administrativos',adm,'','','','','',''),
+    row('Equipos',eq,'','','','','',''),
+    row('TOTAL',total,'','','','','','')
+  ];
+
+  const csv='﻿'+lineas.join('\r\n');   // BOM UTF-8
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
