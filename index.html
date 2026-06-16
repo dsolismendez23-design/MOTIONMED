@@ -725,7 +725,7 @@
         </div>
         <!-- TODOS (tabla unificada completa) -->
         <div id="gastos-det-todos" class="sub-panel active"><div class="card"><div class="table-wrap"><table class="tbl-gastos-full">
-          <thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th><th></th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th><th></th></tr></thead>
           <tbody id="gdet-todos-tbody"></tbody>
         </table></div></div></div>
         <div id="gastos-det-sp" class="sub-panel"><div class="card"><div class="table-wrap"><table>
@@ -1771,28 +1771,30 @@ function exportGastosExcel(){
     [`Período: ${label}`],
     [`Total del mes: ${fmt(total)}`],
     [],  // fila vacía separadora
-    ['Fecha','Categoría','Tipo','Equipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción']
+    ['Fecha','Categoría','Tipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción']
   ];
-  const filas=ordenados.map(g=>[
-    fmtDate(g.fecha),
-    CATS_LABEL[g.cat]||g.cat||'',
-    g.spTipo||g.admTipo||g.eqTipo||'',
-    g.eqNombre||'',
-    g.numFactura||'',
-    g.proveedor||'',
-    g.tipoComp||'',
-    g.monto,
-    g.desc||''
-  ]);
+  const filas=ordenados.map(g=>{
+    const descFull=[g.eqNombre?`Equipo: ${g.eqNombre}`:null, g.desc||null].filter(Boolean).join(' — ')||'';
+    return [
+      fmtDate(g.fecha),
+      CATS_LABEL[g.cat]||g.cat||'',
+      g.spTipo||g.admTipo||g.eqTipo||'',
+      g.numFactura||'',
+      g.proveedor||'',
+      g.tipoComp||'',
+      g.monto,
+      descFull
+    ];
+  });
   // Fila de totales por categoría al final
   const totales=[
     [],
     ['TOTALES POR CATEGORÍA'],
-    ['','Servicios Públicos','','','','','',datos.filter(g=>g.cat==='sp').reduce((s,g)=>s+g.monto,0),''],
-    ['','Alquiler','','','','','',datos.filter(g=>g.cat==='alq').reduce((s,g)=>s+g.monto,0),''],
-    ['','Administrativos','','','','','',datos.filter(g=>g.cat==='adm').reduce((s,g)=>s+g.monto,0),''],
-    ['','Equipos','','','','','',datos.filter(g=>g.cat==='eq').reduce((s,g)=>s+g.monto,0),''],
-    ['','','','','','','TOTAL',total,'']
+    ['','Servicios Públicos','','','','',datos.filter(g=>g.cat==='sp').reduce((s,g)=>s+g.monto,0),''],
+    ['','Alquiler','','','','',datos.filter(g=>g.cat==='alq').reduce((s,g)=>s+g.monto,0),''],
+    ['','Administrativos','','','','',datos.filter(g=>g.cat==='adm').reduce((s,g)=>s+g.monto,0),''],
+    ['','Equipos','','','','',datos.filter(g=>g.cat==='eq').reduce((s,g)=>s+g.monto,0),''],
+    ['','','','','','TOTAL',total,'']
   ];
   const esc=v=>{
     const s=String(v==null?'':v);
@@ -1812,18 +1814,19 @@ function exportGastosPDF(){
   const cats=CATS_LABEL;
   const total=datos.reduce((s,g)=>s+g.monto,0);
   const totCats=Object.fromEntries(Object.keys(cats).map(k=>[k,datos.filter(g=>g.cat===k).reduce((s,g)=>s+g.monto,0)]));
-  const filas=datos.map(g=>{
+  const ordenados=[...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const filas=ordenados.map(g=>{
     const compColor=g.tipoComp==='Factura Electrónica'?'#d1fae5':g.tipoComp==='Comprobante de Pago'?'#fef9c3':'#f3f4f6';
+    const descFull=[g.eqNombre?`Equipo: ${g.eqNombre}`:null, g.desc||null].filter(Boolean).join(' — ')||'—';
     return `<tr>
-      <td>${fmtDate(g.fecha)}</td>
+      <td style="white-space:nowrap">${fmtDate(g.fecha)}</td>
       <td>${cats[g.cat]||'—'}</td>
       <td>${g.spTipo||g.admTipo||g.eqTipo||'—'}</td>
-      <td>${g.eqNombre||'—'}</td>
       <td>${g.numFactura||'—'}</td>
       <td>${g.proveedor||'—'}</td>
-      <td><span style="background:${compColor};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${g.tipoComp||'—'}</span></td>
+      <td><span style="background:${compColor};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;display:inline-block">${g.tipoComp||'—'}</span></td>
       <td class="total">${fmt(g.monto)}</td>
-      <td>${g.desc||'—'}</td>
+      <td>${descFull}</td>
     </tr>`;
   }).join('');
   const cuerpo=`
@@ -1835,8 +1838,8 @@ function exportGastosPDF(){
       <div class="scard navy"><div class="scard-label">Administrativos</div><div class="scard-val">${fmt(totCats.adm)}</div></div>
       <div class="scard"><div class="scard-label">Equipos</div><div class="scard-val">${fmt(totCats.eq)}</div></div>
     </div>
-    <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th></tr></thead>
-    <tbody>${filas||'<tr><td colspan="9" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+    <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th></tr></thead>
+    <tbody>${filas||'<tr><td colspan="8" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
   openReport('Reporte de Gastos — '+label, cuerpo);
 }
 
@@ -1859,19 +1862,21 @@ function renderGastosDetalle(){
   // ── Tabla unificada TODOS ──
   const todosOrdenados=[...mes].sort((a,b)=>a.fecha>b.fecha?1:-1);
   document.getElementById('gdet-todos-tbody').innerHTML=todosOrdenados.length
-    ?todosOrdenados.map(g=>`<tr>
-        <td>${fmtDate(g.fecha)}</td>
-        <td><span class="badge ${g.cat==='sp'?'badge-teal':'badge-navy'}">${CATS_LABEL[g.cat]||'—'}</span></td>
-        <td>${g.spTipo||g.admTipo||g.eqTipo||'—'}</td>
-        <td>${g.eqNombre||'—'}</td>
-        <td>${g.numFactura||'—'}</td>
-        <td>${g.proveedor||'—'}</td>
-        <td>${_compBadge(g.tipoComp)}</td>
-        <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmt(g.monto)}</td>
-        <td>${g.desc||'—'}</td>
-        <td>${del(g.id)}</td>
-      </tr>`).join('')
-    :nd(10);
+    ?todosOrdenados.map(g=>{
+        const descFull=[g.eqNombre?`Equipo: ${g.eqNombre}`:null, g.desc||null].filter(Boolean).join(' — ')||'—';
+        return `<tr>
+          <td style="white-space:nowrap">${fmtDate(g.fecha)}</td>
+          <td><span class="badge ${g.cat==='sp'?'badge-teal':'badge-navy'}">${CATS_LABEL[g.cat]||'—'}</span></td>
+          <td>${g.spTipo||g.admTipo||g.eqTipo||'—'}</td>
+          <td>${g.numFactura||'—'}</td>
+          <td>${g.proveedor||'—'}</td>
+          <td>${_compBadge(g.tipoComp)}</td>
+          <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmt(g.monto)}</td>
+          <td>${descFull}</td>
+          <td>${del(g.id)}</td>
+        </tr>`;
+      }).join('')
+    :nd(9);
 
   // ── Pestañas por categoría ──
   document.getElementById('gdet-sp-tbody').innerHTML=spRows.length
