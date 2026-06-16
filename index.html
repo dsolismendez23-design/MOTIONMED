@@ -219,6 +219,11 @@
     .btn-export-excel:hover{background:#dcfce7;}
     .btn-export-pdf{padding:8px 16px;border-radius:8px;border:1.5px solid #dc2626;background:#fff;color:#dc2626;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
     .btn-export-pdf:hover{background:#fee2e2;}
+    .tbl-gastos-full{min-width:900px;border-collapse:collapse;font-size:13px;}
+    .tbl-gastos-full thead th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;white-space:nowrap;font-size:12px;letter-spacing:.04em;}
+    .tbl-gastos-full tbody tr:nth-child(even){background:#f5f6ff;}
+    .tbl-gastos-full tbody tr:hover{background:#e8eaf6;}
+    .tbl-gastos-full tbody td{padding:9px 12px;border-bottom:1px solid #e8eaf6;vertical-align:middle;}
     @media(max-width:700px){.gdash-grid{grid-template-columns:1fr;}}
     /* ── Admin Tabs ── */
     .admin-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:3px solid var(--navy);}
@@ -712,12 +717,18 @@
       </div>
       <div id="gastos-det">
         <div class="sub-tabs">
-          <button class="sub-tab active" onclick="showSubTab('gastos-det','sp',this)">Servicios Públicos</button>
+          <button class="sub-tab active" id="gtab-todos" onclick="showSubTab('gastos-det','todos',this)">🗂️ Todos</button>
+          <button class="sub-tab" onclick="showSubTab('gastos-det','sp',this)">Serv. Públicos</button>
           <button class="sub-tab" onclick="showSubTab('gastos-det','alq',this)">Alquiler</button>
           <button class="sub-tab" onclick="showSubTab('gastos-det','adm',this)">Administrativos</button>
           <button class="sub-tab" onclick="showSubTab('gastos-det','eq',this)">Equipos</button>
         </div>
-        <div id="gastos-det-sp" class="sub-panel active"><div class="card"><div class="table-wrap"><table>
+        <!-- TODOS (tabla unificada completa) -->
+        <div id="gastos-det-todos" class="sub-panel active"><div class="card"><div class="table-wrap"><table class="tbl-gastos-full">
+          <thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th><th></th></tr></thead>
+          <tbody id="gdet-todos-tbody"></tbody>
+        </table></div></div></div>
+        <div id="gastos-det-sp" class="sub-panel"><div class="card"><div class="table-wrap"><table>
           <thead><tr><th>Servicio</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
           <tbody id="gdet-sp-tbody"></tbody>
         </table></div></div></div>
@@ -1751,20 +1762,43 @@ function _gastosMesActual(){
 
 function exportGastosExcel(){
   const {datos,label}=_gastosMesActual();
-  const cols=['Fecha','Categoría','Tipo','Equipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción'];
-  const rows=datos.map(g=>[
+  const ordenados=[...datos].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  const total=ordenados.reduce((s,g)=>s+g.monto,0);
+
+  // Encabezado del reporte (filas de título antes de la tabla)
+  const titulo=[
+    ['MotionMed — Reporte de Gastos'],
+    [`Período: ${label}`],
+    [`Total del mes: ${fmt(total)}`],
+    [],  // fila vacía separadora
+    ['Fecha','Categoría','Tipo','Equipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción']
+  ];
+  const filas=ordenados.map(g=>[
     fmtDate(g.fecha),
-    CATS_LABEL[g.cat]||g.cat||'—',
-    g.spTipo||g.admTipo||g.eqTipo||'—',
-    g.eqNombre||'—',
-    g.numFactura||'—',
-    g.proveedor||'—',
-    g.tipoComp||'—',
+    CATS_LABEL[g.cat]||g.cat||'',
+    g.spTipo||g.admTipo||g.eqTipo||'',
+    g.eqNombre||'',
+    g.numFactura||'',
+    g.proveedor||'',
+    g.tipoComp||'',
     g.monto,
-    g.desc||'—'
+    g.desc||''
   ]);
-  const esc=v=>typeof v==='string'&&(v.includes(',')||v.includes('"')||v.includes('\n'))?'"'+v.replace(/"/g,'""')+'"':v;
-  const csv='﻿'+[cols,...rows].map(r=>r.map(esc).join(',')).join('\r\n');
+  // Fila de totales por categoría al final
+  const totales=[
+    [],
+    ['TOTALES POR CATEGORÍA'],
+    ['','Servicios Públicos','','','','','',datos.filter(g=>g.cat==='sp').reduce((s,g)=>s+g.monto,0),''],
+    ['','Alquiler','','','','','',datos.filter(g=>g.cat==='alq').reduce((s,g)=>s+g.monto,0),''],
+    ['','Administrativos','','','','','',datos.filter(g=>g.cat==='adm').reduce((s,g)=>s+g.monto,0),''],
+    ['','Equipos','','','','','',datos.filter(g=>g.cat==='eq').reduce((s,g)=>s+g.monto,0),''],
+    ['','','','','','','TOTAL',total,'']
+  ];
+  const esc=v=>{
+    const s=String(v==null?'':v);
+    return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;
+  };
+  const csv='﻿'+[...titulo,...filas,...totales].map(r=>r.map(esc).join(',')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1806,6 +1840,11 @@ function exportGastosPDF(){
   openReport('Reporte de Gastos — '+label, cuerpo);
 }
 
+function _compBadge(tipoComp){
+  if(!tipoComp) return '—';
+  const bg=tipoComp==='Factura Electrónica'?'#d1fae5':tipoComp==='Comprobante de Pago'?'#fef9c3':'#f3f4f6';
+  return `<span style="background:${bg};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap">${tipoComp}</span>`;
+}
 function renderGastosDetalle(){
   const {year,month}=gastosGetMesRef(gastosMesOffset);
   document.getElementById('gdet-mes-label').textContent=MESES_ES[month]+' '+year;
@@ -1814,15 +1853,36 @@ function renderGastosDetalle(){
   const alqRows=mes.filter(g=>g.cat==='alq');
   const admRows=mes.filter(g=>g.cat==='adm');
   const eqRows=mes.filter(g=>g.cat==='eq');
+  const del=(id)=>`<button class="btn btn-danger" onclick="deleteGasto('${id}');renderGastosDetalle()">🗑️</button>`;
   const nd=n=>`<tr><td colspan="${n}" style="text-align:center;color:var(--gray-500);padding:22px">Sin registros</td></tr>`;
+
+  // ── Tabla unificada TODOS ──
+  const todosOrdenados=[...mes].sort((a,b)=>a.fecha>b.fecha?1:-1);
+  document.getElementById('gdet-todos-tbody').innerHTML=todosOrdenados.length
+    ?todosOrdenados.map(g=>`<tr>
+        <td>${fmtDate(g.fecha)}</td>
+        <td><span class="badge ${g.cat==='sp'?'badge-teal':'badge-navy'}">${CATS_LABEL[g.cat]||'—'}</span></td>
+        <td>${g.spTipo||g.admTipo||g.eqTipo||'—'}</td>
+        <td>${g.eqNombre||'—'}</td>
+        <td>${g.numFactura||'—'}</td>
+        <td>${g.proveedor||'—'}</td>
+        <td>${_compBadge(g.tipoComp)}</td>
+        <td style="font-weight:700;color:var(--navy);white-space:nowrap">${fmt(g.monto)}</td>
+        <td>${g.desc||'—'}</td>
+        <td>${del(g.id)}</td>
+      </tr>`).join('')
+    :nd(10);
+
+  // ── Pestañas por categoría ──
   document.getElementById('gdet-sp-tbody').innerHTML=spRows.length
-    ?spRows.map(g=>`<tr><td><span class="badge badge-teal">${g.spTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}');renderGastosDetalle()">🗑️</button></td></tr>`).join(''):nd(5);
+    ?spRows.map(g=>`<tr><td><span class="badge badge-teal">${g.spTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td>${del(g.id)}</td></tr>`).join(''):nd(5);
   document.getElementById('gdet-alq-tbody').innerHTML=alqRows.length
-    ?alqRows.map(g=>`<tr><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}');renderGastosDetalle()">🗑️</button></td></tr>`).join(''):nd(4);
+    ?alqRows.map(g=>`<tr><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td>${del(g.id)}</td></tr>`).join(''):nd(4);
   document.getElementById('gdet-adm-tbody').innerHTML=admRows.length
-    ?admRows.map(g=>`<tr><td><span class="badge badge-navy">${g.admTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}');renderGastosDetalle()">🗑️</button></td></tr>`).join(''):nd(5);
+    ?admRows.map(g=>`<tr><td><span class="badge badge-navy">${g.admTipo}</span></td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td>${del(g.id)}</td></tr>`).join(''):nd(5);
   document.getElementById('gdet-eq-tbody').innerHTML=eqRows.length
-    ?eqRows.map(g=>`<tr><td><span class="badge badge-navy">${g.eqTipo}</span></td><td>${g.eqNombre||'—'}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td><button class="btn btn-danger" onclick="deleteGasto('${g.id}');renderGastosDetalle()">🗑️</button></td></tr>`).join(''):nd(6);
+    ?eqRows.map(g=>`<tr><td><span class="badge badge-navy">${g.eqTipo}</span></td><td>${g.eqNombre||'—'}</td><td>${fmt(g.monto)}</td><td>${fmtDate(g.fecha)}</td><td>${g.desc||'—'}</td><td>${del(g.id)}</td></tr>`).join(''):nd(6);
+
   document.getElementById('gdet-total').textContent=fmt(mes.reduce((s,g)=>s+g.monto,0));
   document.getElementById('gdet-sp').textContent=fmt(spRows.reduce((s,g)=>s+g.monto,0));
   document.getElementById('gdet-alq').textContent=fmt(alqRows.reduce((s,g)=>s+g.monto,0));
