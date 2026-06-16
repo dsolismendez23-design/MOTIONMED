@@ -215,6 +215,10 @@
     .gdet-mes-label{font-size:1.05rem;font-weight:800;color:var(--navy);min-width:160px;text-align:center;}
     .gdet-nav-btn{background:none;border:none;font-size:1.1rem;color:var(--navy);cursor:pointer;padding:2px 8px;border-radius:6px;transition:background .15s;}
     .gdet-nav-btn:hover{background:#dde0f5;}
+    .btn-export-excel{padding:8px 16px;border-radius:8px;border:1.5px solid #16a34a;background:#fff;color:#16a34a;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+    .btn-export-excel:hover{background:#dcfce7;}
+    .btn-export-pdf{padding:8px 16px;border-radius:8px;border:1.5px solid #dc2626;background:#fff;color:#dc2626;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+    .btn-export-pdf:hover{background:#fee2e2;}
     @media(max-width:700px){.gdash-grid{grid-template-columns:1fr;}}
     /* ── Admin Tabs ── */
     .admin-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:3px solid var(--navy);}
@@ -694,7 +698,10 @@
           <span class="gdet-mes-label" id="gdet-mes-label">—</span>
           <button class="gdet-nav-btn" onclick="cambiarMesGastos(1)">&#9654;</button>
         </div>
-        <button class="btn btn-report" onclick="reporteGastos()">📊 Reporte</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-export-excel" onclick="exportGastosExcel()">⬇️ Excel</button>
+          <button class="btn btn-export-pdf" onclick="exportGastosPDF()">📄 PDF</button>
+        </div>
       </div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-label">TOTAL GASTOS</div><div class="stat-value" id="gdet-total">₡0</div></div>
@@ -959,10 +966,6 @@
       <button class="btn-backup-export" onclick="exportarDatos()">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar backup
-      </button>
-      <button class="btn-backup-reset" onclick="restablecerDatos()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Restablecer datos
       </button>
     </div>
   </div>
@@ -1739,6 +1742,70 @@ function cambiarMesGastos(dir){
   gastosMesOffset+=dir;
   renderGastosDetalle();
 }
+const CATS_LABEL={sp:'Servicios Públicos',alq:'Alquiler',adm:'Administrativos',eq:'Equipos'};
+
+function _gastosMesActual(){
+  const {year,month}=gastosGetMesRef(gastosMesOffset);
+  return {datos:gastosFilterMes(year,month), label:MESES_ES[month]+' '+year};
+}
+
+function exportGastosExcel(){
+  const {datos,label}=_gastosMesActual();
+  const cols=['Fecha','Categoría','Tipo','Equipo','N° Factura','Proveedor','Comprobante','Monto (₡)','Descripción'];
+  const rows=datos.map(g=>[
+    fmtDate(g.fecha),
+    CATS_LABEL[g.cat]||g.cat||'—',
+    g.spTipo||g.admTipo||g.eqTipo||'—',
+    g.eqNombre||'—',
+    g.numFactura||'—',
+    g.proveedor||'—',
+    g.tipoComp||'—',
+    g.monto,
+    g.desc||'—'
+  ]);
+  const esc=v=>typeof v==='string'&&(v.includes(',')||v.includes('"')||v.includes('\n'))?'"'+v.replace(/"/g,'""')+'"':v;
+  const csv='﻿'+[cols,...rows].map(r=>r.map(esc).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Gastos_${label.replace(/ /g,'_')}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Archivo Excel descargado ✓');
+}
+
+function exportGastosPDF(){
+  const {datos,label}=_gastosMesActual();
+  const cats=CATS_LABEL;
+  const total=datos.reduce((s,g)=>s+g.monto,0);
+  const totCats=Object.fromEntries(Object.keys(cats).map(k=>[k,datos.filter(g=>g.cat===k).reduce((s,g)=>s+g.monto,0)]));
+  const filas=datos.map(g=>{
+    const compColor=g.tipoComp==='Factura Electrónica'?'#d1fae5':g.tipoComp==='Comprobante de Pago'?'#fef9c3':'#f3f4f6';
+    return `<tr>
+      <td>${fmtDate(g.fecha)}</td>
+      <td>${cats[g.cat]||'—'}</td>
+      <td>${g.spTipo||g.admTipo||g.eqTipo||'—'}</td>
+      <td>${g.eqNombre||'—'}</td>
+      <td>${g.numFactura||'—'}</td>
+      <td>${g.proveedor||'—'}</td>
+      <td><span style="background:${compColor};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${g.tipoComp||'—'}</span></td>
+      <td class="total">${fmt(g.monto)}</td>
+      <td>${g.desc||'—'}</td>
+    </tr>`;
+  }).join('');
+  const cuerpo=`
+    <p style="color:#666;font-size:12px;margin-bottom:14px">Período: ${label}</p>
+    <div class="stats">
+      <div class="scard"><div class="scard-label">Total Gastos</div><div class="scard-val">${fmt(total)}</div></div>
+      <div class="scard navy"><div class="scard-label">Serv. Públicos</div><div class="scard-val">${fmt(totCats.sp)}</div></div>
+      <div class="scard"><div class="scard-label">Alquiler</div><div class="scard-val">${fmt(totCats.alq)}</div></div>
+      <div class="scard navy"><div class="scard-label">Administrativos</div><div class="scard-val">${fmt(totCats.adm)}</div></div>
+      <div class="scard"><div class="scard-label">Equipos</div><div class="scard-val">${fmt(totCats.eq)}</div></div>
+    </div>
+    <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Tipo</th><th>Equipo</th><th>N° Factura</th><th>Proveedor</th><th>Comprobante</th><th>Monto</th><th>Descripción</th></tr></thead>
+    <tbody>${filas||'<tr><td colspan="9" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  openReport('Reporte de Gastos — '+label, cuerpo);
+}
+
 function renderGastosDetalle(){
   const {year,month}=gastosGetMesRef(gastosMesOffset);
   document.getElementById('gdet-mes-label').textContent=MESES_ES[month]+' '+year;
