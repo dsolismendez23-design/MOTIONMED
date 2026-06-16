@@ -387,6 +387,29 @@
     }
 
     /* BACKUP PANEL */
+    /* ── Sync panel ── */
+    .sync-panel{background:#f0f4ff;border:1.5px solid #c7d0f5;border-radius:var(--radius);padding:20px 24px;margin-bottom:22px;}
+    .sync-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+    .sync-icon{width:42px;height:42px;border-radius:12px;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    .sync-title{font-size:15px;font-weight:800;color:var(--navy);}
+    .sync-sub{font-size:12px;color:var(--gray-500);margin-top:2px;}
+    .sync-dot{width:10px;height:10px;border-radius:50%;background:#d1d5db;margin-left:auto;flex-shrink:0;}
+    .sync-dot.connected{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);}
+    .sync-dot.error{background:#ef4444;}
+    .sync-key-row{display:flex;gap:8px;}
+    .sync-key-row input{flex:1;padding:10px 14px;border:1.5px solid #c7d0f5;border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+    .sync-key-row input:focus{border-color:var(--navy);}
+    .btn-sync-connect{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;}
+    .btn-sync-connect:hover{opacity:.85;}
+    .btn-sync-connect:disabled{opacity:.5;cursor:not-allowed;}
+    .sync-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+    .btn-sync-save{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+    .btn-sync-save:hover{opacity:.85;}
+    .btn-sync-load{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:#fff;color:var(--navy);border:1.5px solid var(--navy);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;}
+    .btn-sync-load:hover{background:#e8eaf6;}
+    .btn-sync-disconnect{padding:10px 14px;background:none;color:#9ca3af;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;transition:color .15s;}
+    .btn-sync-disconnect:hover{color:#ef4444;border-color:#ef4444;}
+    /* ── Backup panel ── */
     .backup-panel{
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
       border-radius: var(--radius);
@@ -979,6 +1002,40 @@
         Exportar backup
       </button>
     </div>
+  </div>
+
+  <!-- SINCRONIZACIÓN EN NUBE -->
+  <div class="sync-panel" id="sync-panel">
+    <div class="sync-header">
+      <div class="sync-icon">☁️</div>
+      <div>
+        <div class="sync-title">Sincronización en Nube</div>
+        <div class="sync-sub" id="sync-status-text">Sin configurar</div>
+      </div>
+      <div class="sync-dot" id="sync-dot"></div>
+    </div>
+
+    <div class="sync-key-row" id="sync-key-row">
+      <input type="password" id="sync-api-key" placeholder="Pegue su API Key de JSONBin aquí..."
+        autocomplete="off" oninput="syncKeyInput()"/>
+      <button class="btn-sync-connect" id="btn-sync-connect" onclick="conectarNube()">Conectar</button>
+    </div>
+    <div id="sync-key-hint" style="font-size:11px;color:var(--gray-500);margin-top:4px;display:none">
+      🔒 La clave se guarda solo en este dispositivo, no en el código.
+    </div>
+
+    <div class="sync-actions" id="sync-actions" style="display:none">
+      <button class="btn-sync-save" onclick="guardarEnNube()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+        Guardar en nube
+      </button>
+      <button class="btn-sync-load" onclick="cargarDesdeNube()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+        Cargar desde nube
+      </button>
+      <button class="btn-sync-disconnect" onclick="desconectarNube()">✕ Desconectar</button>
+    </div>
+    <div id="sync-last-save" style="font-size:11px;color:var(--gray-500);margin-top:8px;display:none"></div>
   </div>
 
   <div style="font-size:13px;font-weight:800;color:var(--gray-500);letter-spacing:.6px;text-transform:uppercase;margin-bottom:16px">1. Seleccione el tipo de reporte:</div>
@@ -2527,11 +2584,142 @@ function actualizarEstadoBackup(){
     : `${total} registros guardados en este dispositivo`;
 }
 
+// ═══════════ JSONBIN SYNC ═══════════
+const JB = 'https://api.jsonbin.io/v3';
+
+function jbKey(){ return localStorage.getItem('mm_jb_key')||''; }
+function jbId() { return localStorage.getItem('mm_jb_id')||''; }
+
+function syncKeyInput(){
+  const v = document.getElementById('sync-api-key').value.trim();
+  document.getElementById('sync-key-hint').style.display = v ? 'block' : 'none';
+}
+
+function renderSyncUI(){
+  const key = jbKey();
+  const binId = jbId();
+  const last = localStorage.getItem('mm_jb_last');
+  const dot  = document.getElementById('sync-dot');
+  const statusText = document.getElementById('sync-status-text');
+  const keyRow  = document.getElementById('sync-key-row');
+  const actions = document.getElementById('sync-actions');
+  const lastEl  = document.getElementById('sync-last-save');
+
+  if(key && binId){
+    dot.className = 'sync-dot connected';
+    statusText.textContent = 'Conectado · Nube activa';
+    keyRow.style.display  = 'none';
+    actions.style.display = 'flex';
+    if(last){
+      lastEl.style.display = 'block';
+      lastEl.textContent = '☁️ Último guardado: ' + new Date(last).toLocaleString('es-CR');
+    }
+  } else if(key && !binId){
+    dot.className = 'sync-dot';
+    statusText.textContent = 'Clave guardada — conectando por primera vez…';
+    keyRow.style.display  = 'none';
+    actions.style.display = 'flex';
+  } else {
+    dot.className = 'sync-dot';
+    statusText.textContent = 'Sin configurar — pegue su API Key de JSONBin';
+    keyRow.style.display  = 'flex';
+    actions.style.display = 'none';
+    lastEl.style.display  = 'none';
+    document.getElementById('sync-key-hint').style.display = 'none';
+  }
+}
+
+async function conectarNube(){
+  const key = document.getElementById('sync-api-key').value.trim();
+  if(!key){ toast('Pegue su API Key primero ⚠️'); return; }
+  const btn = document.getElementById('btn-sync-connect');
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  try{
+    // Buscar bin existente llamado MotionMed
+    const r = await fetch(`${JB}/b`, { headers:{'X-Master-Key':key} });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.message||'Clave inválida');
+    const bins = d.record || [];
+    const existing = bins.find(b => b.snippetMeta?.name === 'MotionMed');
+    if(existing){
+      localStorage.setItem('mm_jb_id', existing.id);
+      localStorage.setItem('mm_jb_key', key);
+      toast('¡Bin MotionMed encontrado! Datos disponibles para cargar ✓');
+    } else {
+      // Crear bin nuevo
+      const cr = await fetch(`${JB}/b`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'MotionMed','X-Bin-Private':'true'},
+        body: JSON.stringify({clientes:[],profesionales:[],gastos:[],ingresos:[],equipos:[],fecha:new Date().toISOString()})
+      });
+      const cd = await cr.json();
+      if(!cr.ok) throw new Error(cd.message||'Error al crear bin');
+      localStorage.setItem('mm_jb_id', cd.metadata.id);
+      localStorage.setItem('mm_jb_key', key);
+      toast('Nube configurada correctamente ✓');
+    }
+    renderSyncUI();
+  } catch(e){
+    toast('Error: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Conectar';
+  }
+}
+
+async function guardarEnNube(){
+  const key = jbKey(); const binId = jbId();
+  if(!key || !binId){ toast('Configure la nube primero'); return; }
+  toast('Guardando…');
+  try{
+    const payload = {clientes, profesionales, gastos, ingresos, equipos, fecha: new Date().toISOString()};
+    const r = await fetch(`${JB}/b/${binId}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':key},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.message||r.status);
+    localStorage.setItem('mm_jb_last', new Date().toISOString());
+    renderSyncUI();
+    toast('✓ Datos guardados en la nube');
+  } catch(e){ toast('Error al guardar: '+e.message); }
+}
+
+async function cargarDesdeNube(){
+  const key = jbKey(); const binId = jbId();
+  if(!key || !binId){ toast('Configure la nube primero'); return; }
+  if(!confirm('¿Cargar datos desde la nube? Esto reemplazará los datos actuales en este dispositivo.')) return;
+  toast('Cargando…');
+  try{
+    const r = await fetch(`${JB}/b/${binId}/latest`, { headers:{'X-Master-Key':key} });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.message||r.status);
+    const rec = d.record;
+    clientes      = rec.clientes     ||[]; DB.save('mm_clientes',      clientes);
+    profesionales = rec.profesionales||[]; DB.save('mm_profesionales', profesionales);
+    gastos        = rec.gastos       ||[]; DB.save('mm_gastos',        gastos);
+    ingresos      = rec.ingresos     ||[]; DB.save('mm_ingresos',      ingresos);
+    equipos       = rec.equipos      ||[]; DB.save('mm_equipos',       equipos);
+    renderAll();
+    toast('✓ Datos cargados desde la nube');
+  } catch(e){ toast('Error al cargar: '+e.message); }
+}
+
+function desconectarNube(){
+  if(!confirm('¿Desconectar la nube en este dispositivo? Los datos locales no se borran.')) return;
+  localStorage.removeItem('mm_jb_key');
+  localStorage.removeItem('mm_jb_id');
+  localStorage.removeItem('mm_jb_last');
+  document.getElementById('sync-api-key').value = '';
+  renderSyncUI();
+  toast('Nube desconectada en este dispositivo');
+}
+
 // ═══════════ PWA ═══════════
 if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 renderAll();
+renderSyncUI();
 actualizarEstadoBackup();
 </script>
 </body>
