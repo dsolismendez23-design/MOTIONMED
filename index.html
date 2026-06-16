@@ -1015,14 +1015,26 @@
       <div class="sync-dot" id="sync-dot"></div>
     </div>
 
-    <div class="sync-key-row" id="sync-key-row">
-      <input type="password" id="sync-api-key" placeholder="Pegue su API Key de JSONBin aquí..."
-        autocomplete="off" oninput="syncKeyInput()"/>
-      <button class="btn-sync-connect" id="btn-sync-connect" onclick="conectarNube()">Conectar</button>
+    <div id="sync-key-row">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="sync-key-row">
+          <input type="password" id="sync-api-key" placeholder="Pegue su API Key de JSONBin aquí..."
+            autocomplete="off"/>
+          <button class="btn-sync-connect" id="btn-sync-connect" onclick="conectarNube()">Conectar</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="text" id="sync-bin-id-input"
+            placeholder="Bin ID (solo si ya usó la nube en otro dispositivo)"
+            autocomplete="off"
+            style="flex:1;padding:8px 12px;border:1.5px solid #c7d0f5;border-radius:8px;font-size:12px;font-family:inherit;color:var(--gray-700)"/>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500)">
+          🔒 La clave se guarda solo en este dispositivo. &nbsp;·&nbsp;
+          El <strong>Bin ID</strong> aparece después de la primera conexión — anótelo para usar en otros dispositivos.
+        </div>
+      </div>
     </div>
-    <div id="sync-key-hint" style="font-size:11px;color:var(--gray-500);margin-top:4px;display:none">
-      🔒 La clave se guarda solo en este dispositivo, no en el código.
-    </div>
+    <div id="sync-key-hint" style="display:none"></div>
 
     <div class="sync-actions" id="sync-actions" style="display:none">
       <button class="btn-sync-save" onclick="guardarEnNube()">
@@ -2590,73 +2602,73 @@ const JB = 'https://api.jsonbin.io/v3';
 function jbKey(){ return localStorage.getItem('mm_jb_key')||''; }
 function jbId() { return localStorage.getItem('mm_jb_id')||''; }
 
-function syncKeyInput(){
-  const v = document.getElementById('sync-api-key').value.trim();
-  document.getElementById('sync-key-hint').style.display = v ? 'block' : 'none';
-}
-
 function renderSyncUI(){
-  const key = jbKey();
+  const key   = jbKey();
   const binId = jbId();
-  const last = localStorage.getItem('mm_jb_last');
-  const dot  = document.getElementById('sync-dot');
+  const last  = localStorage.getItem('mm_jb_last');
+  const dot        = document.getElementById('sync-dot');
   const statusText = document.getElementById('sync-status-text');
-  const keyRow  = document.getElementById('sync-key-row');
-  const actions = document.getElementById('sync-actions');
-  const lastEl  = document.getElementById('sync-last-save');
+  const keyRow     = document.getElementById('sync-key-row');
+  const actions    = document.getElementById('sync-actions');
+  const lastEl     = document.getElementById('sync-last-save');
 
   if(key && binId){
-    dot.className = 'sync-dot connected';
+    dot.className        = 'sync-dot connected';
     statusText.textContent = 'Conectado · Nube activa';
-    keyRow.style.display  = 'none';
-    actions.style.display = 'flex';
-    if(last){
-      lastEl.style.display = 'block';
-      lastEl.textContent = '☁️ Último guardado: ' + new Date(last).toLocaleString('es-CR');
-    }
-  } else if(key && !binId){
-    dot.className = 'sync-dot';
-    statusText.textContent = 'Clave guardada — conectando por primera vez…';
-    keyRow.style.display  = 'none';
-    actions.style.display = 'flex';
+    keyRow.style.display   = 'none';
+    actions.style.display  = 'flex';
+    lastEl.style.display   = 'block';
+    lastEl.innerHTML = `<span style="user-select:all;font-weight:600">Bin ID: ${binId}</span>
+      <button onclick="navigator.clipboard.writeText('${binId}').then(()=>toast('Bin ID copiado ✓'))"
+        style="margin-left:8px;padding:2px 8px;border:1px solid #c7d0f5;border-radius:5px;background:#fff;cursor:pointer;font-size:11px">Copiar</button>
+      ${last ? `<br>☁️ Último guardado: ${new Date(last).toLocaleString('es-CR')}` : ''}`;
   } else {
-    dot.className = 'sync-dot';
+    dot.className          = 'sync-dot';
     statusText.textContent = 'Sin configurar — pegue su API Key de JSONBin';
-    keyRow.style.display  = 'flex';
-    actions.style.display = 'none';
-    lastEl.style.display  = 'none';
-    document.getElementById('sync-key-hint').style.display = 'none';
+    keyRow.style.display   = 'block';
+    actions.style.display  = 'none';
+    lastEl.style.display   = 'none';
   }
 }
 
 async function conectarNube(){
-  const key = document.getElementById('sync-api-key').value.trim();
+  const key         = document.getElementById('sync-api-key').value.trim();
+  const manualBinId = document.getElementById('sync-bin-id-input').value.trim();
   if(!key){ toast('Pegue su API Key primero ⚠️'); return; }
+
   const btn = document.getElementById('btn-sync-connect');
-  btn.disabled = true; btn.textContent = 'Verificando…';
+  btn.disabled = true; btn.textContent = 'Conectando…';
+
   try{
-    // Buscar bin existente llamado MotionMed
-    const r = await fetch(`${JB}/b`, { headers:{'X-Master-Key':key} });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.message||'Clave inválida');
-    const bins = d.record || [];
-    const existing = bins.find(b => b.snippetMeta?.name === 'MotionMed');
-    if(existing){
-      localStorage.setItem('mm_jb_id', existing.id);
-      localStorage.setItem('mm_jb_key', key);
-      toast('¡Bin MotionMed encontrado! Datos disponibles para cargar ✓');
-    } else {
-      // Crear bin nuevo
-      const cr = await fetch(`${JB}/b`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'MotionMed','X-Bin-Private':'true'},
-        body: JSON.stringify({clientes:[],profesionales:[],gastos:[],ingresos:[],equipos:[],fecha:new Date().toISOString()})
+    if(manualBinId){
+      // Segundo dispositivo: verificar que el bin existe con esa clave
+      const r = await fetch(`${JB}/b/${manualBinId}/latest`, {
+        headers:{'X-Master-Key':key}
       });
-      const cd = await cr.json();
-      if(!cr.ok) throw new Error(cd.message||'Error al crear bin');
-      localStorage.setItem('mm_jb_id', cd.metadata.id);
+      if(!r.ok){ const d=await r.json(); throw new Error(d.message||'Bin ID o clave incorrectos'); }
       localStorage.setItem('mm_jb_key', key);
-      toast('Nube configurada correctamente ✓');
+      localStorage.setItem('mm_jb_id',  manualBinId);
+      toast('¡Conectado! Use "Cargar desde nube" para obtener los datos ✓');
+    } else {
+      // Primer dispositivo: crear bin nuevo directamente
+      const r = await fetch(`${JB}/b`, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'X-Master-Key':key,
+          'X-Bin-Name':'MotionMed',
+          'X-Bin-Private':'true'
+        },
+        body: JSON.stringify({
+          clientes:[],profesionales:[],gastos:[],ingresos:[],equipos:[],
+          fecha: new Date().toISOString()
+        })
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.message||'Clave inválida o error de red');
+      localStorage.setItem('mm_jb_key', key);
+      localStorage.setItem('mm_jb_id',  d.metadata.id);
+      toast('Nube configurada ✓ — anote el Bin ID para otros dispositivos');
     }
     renderSyncUI();
   } catch(e){
