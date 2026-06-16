@@ -194,6 +194,11 @@
     .pago-total-bar .amount{font-size:20px;color:var(--teal-light);}
 
     /* SUB TABS */
+    .admin-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:3px solid var(--navy);}
+    .admin-tab{padding:10px 28px;font-size:1rem;font-weight:700;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-3px;cursor:pointer;color:var(--gray-700);transition:color .2s,border-color .2s;}
+    .admin-tab.active{color:var(--navy);border-bottom-color:var(--teal);}
+    .admin-panel{display:none;}
+    .admin-panel.active{display:block;}
     .sub-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
     .sub-tab{padding:9px 18px;border-radius:20px;border:1.5px solid var(--gray-200);
       background:white;color:var(--gray-700);cursor:pointer;font-size:14px;font-weight:600;transition:all .2s;}
@@ -468,12 +473,11 @@
   </div>
 </header>
 
-<nav>
-  <button class="nav-btn active" onclick="showModule('home')">🏠 INICIO</button>
-  <button class="nav-btn" onclick="showModule('clientes')">👤 CLIENTES</button>
+<nav id="main-nav" style="display:none">
+  <button class="nav-btn" onclick="showModule('home')">🏠 INICIO</button>
+  <button class="nav-btn active" onclick="showModule('clientes')">👤 CLIENTES</button>
   <button class="nav-btn" onclick="showModule('profesionales')">🩺 PROFESIONALES</button>
-  <button class="nav-btn" onclick="showModule('gastos')">💸 GASTOS</button>
-  <button class="nav-btn" onclick="showModule('ingresos')">💰 INGRESOS</button>
+  <button class="nav-btn" onclick="showModule('administracion')">💼 ADMINISTRACIÓN</button>
   <button class="nav-btn" onclick="showModule('equipos')">🏋️ EQUIPOS</button>
   <button class="nav-btn" onclick="showModule('reportes')">📊 REPORTES</button>
 </nav>
@@ -516,7 +520,7 @@
       Palmares, Alajuela, Costa Rica
     </div>
 
-    <button class="home-enter-btn" onclick="showModule('clientes')">
+    <button class="home-enter-btn" onclick="enterApp()">
       Ingresar al sistema →
     </button>
 
@@ -577,48 +581,59 @@
   </div>
 </div>
 
-<!-- ════════════════ GASTOS ════════════════ -->
-<div id="mod-gastos" class="module">
+<!-- ════════════════ ADMINISTRACIÓN ════════════════ -->
+<div id="mod-administracion" class="module">
   <div class="module-header">
-    <div class="module-title">💸 Gastos</div>
-    <div class="header-actions">
-      <button class="btn btn-report" onclick="reporteGastos()">📊 Reporte</button>
-      <button class="btn btn-primary" onclick="openModal('gasto')">+ Registrar Gasto</button>
-    </div>
+    <div class="module-title">💼 Administración</div>
   </div>
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">TOTAL GASTOS</div><div class="stat-value" id="total-gastos">₡0</div></div>
-    <div class="stat-card navy"><div class="stat-label">SERVICIOS PÚBLICOS</div><div class="stat-value" id="total-sp">₡0</div></div>
-    <div class="stat-card"><div class="stat-label">ALQUILER</div><div class="stat-value" id="total-alq">₡0</div></div>
-    <div class="stat-card navy"><div class="stat-label">ADMINISTRATIVOS</div><div class="stat-value" id="total-adm">₡0</div></div>
-    <div class="stat-card"><div class="stat-label">EQUIPOS</div><div class="stat-value" id="total-eq-g">₡0</div></div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" id="atab-gastos" onclick="showAdminTab('gastos')">💸 GASTOS</button>
+    <button class="admin-tab" id="atab-ingresos" onclick="showAdminTab('ingresos')">💰 INGRESOS</button>
   </div>
-  <div class="sub-tabs">
-    <button class="sub-tab active" onclick="showSubTab('gastos','sp',this)">Servicios Públicos</button>
-    <button class="sub-tab" onclick="showSubTab('gastos','alq',this)">Alquiler</button>
-    <button class="sub-tab" onclick="showSubTab('gastos','adm',this)">Administrativos</button>
-    <button class="sub-tab" onclick="showSubTab('gastos','eq',this)">Equipos</button>
-  </div>
-  <div id="gastos-sp" class="sub-panel active"><div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Servicio</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
-    <tbody id="gastos-sp-tbody"></tbody>
-  </table></div></div></div>
-  <div id="gastos-alq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
-    <tbody id="gastos-alq-tbody"></tbody>
-  </table></div></div></div>
-  <div id="gastos-adm" class="sub-panel"><div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
-    <tbody id="gastos-adm-tbody"></tbody>
-  </table></div></div></div>
-  <div id="gastos-eq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
-    <thead><tr><th>Tipo</th><th>Equipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
-    <tbody id="gastos-eq-tbody"></tbody>
-  </table></div></div></div>
-</div>
 
-<!-- ════════════════ INGRESOS ════════════════ -->
-<div id="mod-ingresos" class="module">
+  <!-- ── GASTOS panel ── -->
+  <div id="admin-gastos" class="admin-panel active">
+    <div class="module-header" style="padding:0 0 12px 0;border:none">
+      <div class="module-title" style="font-size:1.1rem">💸 Gastos</div>
+      <div class="header-actions">
+        <button class="btn btn-report" onclick="reporteGastos()">📊 Reporte</button>
+        <button class="btn btn-primary" onclick="openModal('gasto')">+ Registrar Gasto</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">TOTAL GASTOS</div><div class="stat-value" id="total-gastos">₡0</div></div>
+      <div class="stat-card navy"><div class="stat-label">SERVICIOS PÚBLICOS</div><div class="stat-value" id="total-sp">₡0</div></div>
+      <div class="stat-card"><div class="stat-label">ALQUILER</div><div class="stat-value" id="total-alq">₡0</div></div>
+      <div class="stat-card navy"><div class="stat-label">ADMINISTRATIVOS</div><div class="stat-value" id="total-adm">₡0</div></div>
+      <div class="stat-card"><div class="stat-label">EQUIPOS</div><div class="stat-value" id="total-eq-g">₡0</div></div>
+    </div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="showSubTab('gastos','sp',this)">Servicios Públicos</button>
+      <button class="sub-tab" onclick="showSubTab('gastos','alq',this)">Alquiler</button>
+      <button class="sub-tab" onclick="showSubTab('gastos','adm',this)">Administrativos</button>
+      <button class="sub-tab" onclick="showSubTab('gastos','eq',this)">Equipos</button>
+    </div>
+    <div id="gastos-sp" class="sub-panel active"><div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Servicio</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+      <tbody id="gastos-sp-tbody"></tbody>
+    </table></div></div></div>
+    <div id="gastos-alq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+      <tbody id="gastos-alq-tbody"></tbody>
+    </table></div></div></div>
+    <div id="gastos-adm" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Tipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+      <tbody id="gastos-adm-tbody"></tbody>
+    </table></div></div></div>
+    <div id="gastos-eq" class="sub-panel"><div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Tipo</th><th>Equipo</th><th>Monto</th><th>Fecha</th><th>Descripción</th><th></th></tr></thead>
+      <tbody id="gastos-eq-tbody"></tbody>
+    </table></div></div></div>
+  </div>
+
+  <!-- ── INGRESOS panel ── -->
+  <div id="admin-ingresos" class="admin-panel">
+<div id="mod-ingresos" style="display:block">
   <div class="module-header">
     <div class="module-title">💰 Ingresos</div>
     <div class="header-actions">
@@ -795,6 +810,8 @@
     </table></div></div>
   </div>
 </div>
+  </div><!-- /admin-ingresos -->
+</div><!-- /mod-administracion -->
 
 <!-- ════════════════ EQUIPOS ════════════════ -->
 <div id="mod-equipos" class="module">
@@ -1186,17 +1203,29 @@ const esc    = s=>(s||'').replace(/'/g,"\\'");
 let fichaActualId = null;
 
 // ═══════════ NAV ═══════════
+function enterApp(){
+  document.getElementById('main-nav').style.display='';
+  showModule('clientes');
+}
 function showModule(name){
   document.querySelectorAll('.module').forEach(m=>m.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('mod-'+name).classList.add('active');
-  const map={home:0,clientes:1,profesionales:2,gastos:3,ingresos:4,equipos:5,reportes:6};
-  document.querySelectorAll('.nav-btn')[map[name]].classList.add('active');
+  const el=document.getElementById('mod-'+name);
+  if(el) el.classList.add('active');
+  const map={home:0,clientes:1,profesionales:2,administracion:3,equipos:4,reportes:5};
+  if(map[name]!==undefined) document.querySelectorAll('.nav-btn')[map[name]].classList.add('active');
   renderAll();
 }
+function showAdminTab(tab){
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('admin-'+tab).classList.add('active');
+  document.getElementById('atab-'+tab).classList.add('active');
+}
 function showSubTab(mod,tab,el){
-  document.querySelectorAll(`#mod-${mod} .sub-panel`).forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll(`#mod-${mod} .sub-tab`).forEach(t=>t.classList.remove('active'));
+  const container=document.getElementById('admin-'+mod)||document.getElementById('mod-'+mod);
+  container.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  container.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById(`${mod}-${tab}`).classList.add('active');
   el.classList.add('active');
 }
